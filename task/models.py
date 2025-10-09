@@ -1,13 +1,13 @@
 from django.db import models
 
 class User(models.Model):
-    passWord = models.CharField(max_length=16)
+    passWord= models.CharField(max_length=16)
 
 class Course(models.Model):
     name = models.CharField(max_length=16)
 
-class Assignment(models.Model):
+class Assaignment(models.Model):
     title = models.CharField(max_length=16)
     description = models.TextField()
-    due_date = models.DateTimeField(auto_now=False)
-    status = models.CharField(max_length=8)
+    dueDate = models.DateTimeField(auto_now=False)
+    status = models.CharField(max_length = 8)
