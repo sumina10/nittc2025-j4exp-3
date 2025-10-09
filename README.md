@@ -69,43 +69,66 @@
 |科目情報|科目名、担当教員名|
 |課題進捗情報|科目名、個人名、締切、進捗状況|
 
-
-
-
 ```mermaid
 classDiagram
-    クラス内課題管理システム <|-- 学生
-    クラス内課題管理システム <|-- 教員
-    クラス内課題管理システム <|-- 管理者
-    クラス内課題管理システム : +学生ID
-    クラス内課題管理システム : +学生名
-    クラス内課題管理システム : +教員ID
-    クラス内課題管理システム : +教員名
-    クラス内課題管理システム : +科目ID
-    クラス内課題管理システム : +科目名
-    
-    クラス内課題管理システム : +締め切り
-    クラス内課題管理システム : +進捗状況
+    direction LR
 
-    クラス内課題管理システム: +タスク登録()
-    クラス内課題管理システム: +ステータス確認()
-    クラス内課題管理システム: +CSVインポート()
-    class 学生{
-        +学生ID
-        -学生パスワード
-        -ログイン()
-        -課題設定()
-        +課題閲覧()
-    }
-    class 教員{
-        +教員ID
-        -教員パスワード
-        -ログイン()
-    }
-    class 管理者{
-        +管理者ID
-        -管理者パスワード
-        +CSVインポート()
+    class User {
+        <<Abstract>>
+        +ID
+        #パスワード
+        +login()
+        +logout()
     }
 
+    class Student {
+        +createAssignment()
+        +updateAssignment()
+        +deleteAssignment()
+        +checkStatus()
+    }
+
+    class Teacher {
+        +viewStudentProgress()
+    }
+
+    class Admin {
+        +manageUsers()
+        +manageCourses()
+    }
+
+    class Course {
+        +CourseID
+        +CourseName
+    }
+
+    class Assignment {
+        +AssignmentTitle
+        +Description
+        +DueDate
+        +Status
+    }
+
+    %% class System{
+    %%     +ViewStudentStuts
+    %%     +remind()
+    %% }
+
+    User <|-- Student
+    User <|-- Teacher
+    User <|-- Admin
+
+    %% 学生(複数)はコース(複数)を受講する
+    Student "1..*" -- "1..*" Course : takes
+    %% %% システム(複数)は学生(複数)にリマインドする
+    %% System "1" -- "1*" Student : remind
+    %% 教師(1)は科目(複数)を教える
+    Teacher "1" -- "1..*" Course : teaches
+
+
+    %% 学生(1)が課題(複数)を作成
+    Student "1" -- "0..*" Assignment : creates
+
+    %% 課題(1)が科目(複数)に紐づく
+    Course "1" -- "0..*" Assignment : belongs to
 ```
