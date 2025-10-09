@@ -68,3 +68,67 @@
 |教員情報|ほぼ学生と同じ|
 |科目情報|科目名、担当教員名|
 |課題進捗情報|科目名、個人名、締切、進捗状況|
+
+```mermaid
+classDiagram
+    direction LR
+
+    class User {
+        <<Abstract>>
+        +ID
+        #パスワード
+        +login()
+        +logout()
+    }
+
+    class Student {
+        +createAssignment()
+        +updateAssignment()
+        +deleteAssignment()
+        +checkStatus()
+    }
+
+    class Teacher {
+        +viewStudentProgress()
+    }
+
+    class Admin {
+        +manageUsers()
+        +manageCourses()
+    }
+
+    class Course {
+        +CourseID
+        +CourseName
+    }
+
+    class Assignment {
+        +AssignmentTitle
+        +Description
+        +DueDate
+        +Status
+    }
+
+    %% class System{
+    %%     +ViewStudentStuts
+    %%     +remind()
+    %% }
+
+    User <|-- Student
+    User <|-- Teacher
+    User <|-- Admin
+
+    %% 学生(複数)はコース(複数)を受講する
+    Student "1..*" -- "1..*" Course : takes
+    %% %% システム(複数)は学生(複数)にリマインドする
+    %% System "1" -- "1*" Student : remind
+    %% 教師(1)は科目(複数)を教える
+    Teacher "1" -- "1..*" Course : teaches
+
+
+    %% 学生(1)が課題(複数)を作成
+    Student "1" -- "0..*" Assignment : creates
+
+    %% 課題(1)が科目(複数)に紐づく
+    Course "1" -- "0..*" Assignment : belongs to
+```
