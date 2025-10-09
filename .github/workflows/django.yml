@@ -30,4 +30,5 @@ jobs:
       - name: Run Ruff
         uses: astral-sh/ruff-action@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          args: "check --output-format=github"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
