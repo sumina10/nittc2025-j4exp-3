@@ -102,6 +102,12 @@ classDiagram
         +CourseName
     }
 
+    class ClassRoom {
+        +ClassRoomID
+        +Grade
+        +Class
+    }
+
     class Assignment {
         +AssignmentTitle
         +Description
@@ -131,4 +137,10 @@ classDiagram
 
     %% 課題(1)が科目(複数)に紐づく
     Course "1" -- "0..*" Assignment : belongs to
+
+    %% 先生(複数)がクラス(1? ASK)に紐づく
+    Teacher "1..*" -- "1" ClassRoom : belongs to
+
+    %% 学生(複数)がクラス(1)に紐づく
+    Student "1..*" -- "1" ClassRoom : belongs to
 ```
