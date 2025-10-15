@@ -1,9 +1,15 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError
 from django import forms
+from django.shortcuts import render
+from django.urls import path
 from django.utils.translation import gettext_lazy as _
+import csv
+import io
 from .models import CustomUser, Teacher, Student
+from .forms import CsvImportForm
+
 
 # Register your models here.
 
@@ -106,6 +112,13 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 
 class TeacherAdmin(CustomUserAdmin):
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [
+            path('import_csv/', self.admin_site.admin_view(self.import_csv), name='teacher_import_csv'),
+        ] + urls
+        return urls
+
     """教員モデルの管理画面設定"""
     def get_queryset(self, request):
         """Teacherモデルのみを取得"""
@@ -116,8 +129,75 @@ class TeacherAdmin(CustomUserAdmin):
         obj.is_teacher = True
         super().save_model(request, obj, form, change)
 
+    """CSVインポートアクションの追加"""
+    def import_csv(self, request):
+        form = CsvImportForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            csv_file = form.cleaned_data['csv_file']
+
+            decoded_file = csv_file.read().decode('utf-8')
+            io_string = io.StringIO(decoded_file)
+            reader = csv.reader(io_string)
+            _header = next(reader)  # ヘッダー行をスキップ
+
+            users_created = 0
+            users_failed = 0
+
+            for row in reader:
+                if len(row) < 4:
+                    users_failed += 1
+                    continue  # 不完全な行はスキップ
+
+                # TODO: 仕様と一致しない
+                user_id, first_name, last_name, password = row[:4]
+                if not CustomUser.objects.filter(user_id=user_id).exists():
+                    user = Student(
+                        user_id=user_id,
+                        first_name=first_name,
+                        last_name=last_name,
+                        is_teacher=False,
+                        is_superuser=False,
+                    )
+                    user.set_password(password)
+                    user.save()
+                    users_created += 1
+                else:
+                    users_failed += 1  # 既存ユーザーはスキップ
+            self.message_user(
+                request, 
+                f"インポート完了: {users_created} 件のユーザーが作成されました。{users_failed} 件の行がスキップされました。", 
+                level= messages.SUCCESS if users_failed == 0 else messages.WARNING
+            )
+            return None  # リダイレクトしない
+        context = {
+            'form': form,
+            'title': _('CSVファイルから教師をインポート'),
+            'csv_format' : _('user_id, first_name, last_name, password'),
+            'opts': self.model._meta,
+            'has_permission': self.has_change_permission(request),
+        }
+
+        return render(
+            request,
+            "admin/csv_form.html",
+            context,
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['import_form'] = 'import_csv/'
+        return super().changelist_view(request, extra_context)
+
 
 class StudentAdmin(CustomUserAdmin):
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [
+            path('import_csv/', self.admin_site.admin_view(self.import_csv), name='student_import_csv'),
+        ] + urls
+        return urls
+
     """学生モデルの管理画面設定"""
     def get_queryset(self, request):
         """Studentモデルのみを取得"""
@@ -127,6 +207,65 @@ class StudentAdmin(CustomUserAdmin):
         """学生として保存する際に、is_teacherを自動設定"""
         obj.is_teacher = False
         super().save_model(request, obj, form, change)
+
+    """CSVインポートアクションの追加"""
+    def import_csv(self, request):
+        form = CsvImportForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            csv_file = form.cleaned_data['csv_file']
+
+            decoded_file = csv_file.read().decode('utf-8')
+            io_string = io.StringIO(decoded_file)
+            reader = csv.reader(io_string)
+            _header = next(reader)  # ヘッダー行をスキップ
+
+            users_created = 0
+            users_failed = 0
+
+            for row in reader:
+                if len(row) < 3:
+                    users_failed += 1
+                    continue  # 不完全な行はスキップ
+                # TODO: 仕様と一致しない
+                user_id, grade, classroom = row[:3]
+                if not CustomUser.objects.filter(user_id=user_id).exists():
+                    user = Student(
+                        user_id=user_id,
+                        first_name='',
+                        last_name='',
+                        is_teacher=False,
+                        is_superuser=False,
+                    )
+                    user.set_password(password)
+                    user.save()
+                    users_created += 1
+                else:
+                    users_failed += 1  # 既存ユーザーはスキップ
+            self.message_user(
+                request, 
+                f"インポート完了: {users_created} 件のユーザーが作成されました。{users_failed} 件の行がスキップされました。", 
+                level= messages.SUCCESS if users_failed == 0 else messages.WARNING
+            )
+            return None  # リダイレクトしない
+        context = {
+            'form': form,
+            'title': _('CSVファイルから学生をインポート'),
+            'csv_format' : _('user_id, first_name, last_name, password'),
+            'opts': self.model._meta,
+            'has_permission': self.has_change_permission(request),
+        }
+
+        return render(
+            request,
+            "admin/csv_form.html",
+            context,
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['import_form'] = 'import_csv/'
+        return super().changelist_view(request, extra_context)
 
 
 # モデルの登録
