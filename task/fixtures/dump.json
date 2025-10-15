@@ -55,7 +55,7 @@
             "title": "課題",
             "description": "やれ",
             "due_date": "2025-10-15T22:35:15Z",
-            "status": "No",
+            "status": 0,
             "course": 1,
             "student": 3
         }
@@ -67,7 +67,7 @@
             "title": "なんかすごい",
             "description": "やれ",
             "due_date": "2025-10-15T22:53:07Z",
-            "status": "まだ",
+            "status": 0,
             "course": 2,
             "student": 4
         }
