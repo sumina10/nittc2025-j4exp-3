@@ -109,8 +109,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = _('ユーザー')
 
 
+class TeacherManager(CustomUserManager):
+    """教員のみを取得するマネージャー"""
+    def get_queryset(self):
+        return super().get_queryset().filter(is_teacher=True)
+
 class Teacher(CustomUser):
     """教員モデル"""
+
+    objects = TeacherManager()
     
     class Meta:
         proxy = True
@@ -133,9 +140,15 @@ class Teacher(CustomUser):
             queryset = CustomUser.objects.all()
         return queryset.filter(is_teacher=True)
 
+class StudentManager(CustomUserManager):
+    """学生のみを取得するマネージャー"""
+    def get_queryset(self):
+        return super().get_queryset().filter(is_teacher=False)
 
 class Student(CustomUser):
     """学生モデル"""
+
+    objects = StudentManager()
     
     class Meta:
         proxy = True
