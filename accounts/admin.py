@@ -152,7 +152,7 @@ class TeacherAdmin(CustomUserAdmin):
                 # TODO: 仕様と一致しない
                 user_id, first_name, last_name, password = row[:4]
                 if not CustomUser.objects.filter(user_id=user_id).exists():
-                    user = Student(
+                    user = Teacher(
                         user_id=user_id,
                         first_name=first_name,
                         last_name=last_name,
