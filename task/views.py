@@ -11,7 +11,7 @@ from .models import Assignment
 class CreateAssignment(CreateView, LoginRequiredMixin):
     model = Assignment
     fields = ["title","description","course"] # studentはログインしている人のIDを使うためあとで付け足し
-    template_name = "task/teketou.html"
+    template_name = "task/registration.html"
     
     success_url = reverse_lazy('task-create') # 'create'はリダイレクト先のURLパターン名
 
@@ -29,13 +29,13 @@ class CreateAssignment(CreateView, LoginRequiredMixin):
         combined_data['student'] = form.instance.student
         combined_data['due_date'] = form .instance.due_date
         print(combined_data)
-
         return super().form_valid(form)
 
-class CreateStuddentHome(ListView):
+class CreateStudentHome(ListView,LoginRequiredMixin): #CreateStudentHomeがListViewとLoginRequiredMixinを継承
     model = Assignment #クラスを作る時点では全部の情報が取得できてOK
     # queryset = Assignment.objects.filter(student = self.request.user)
     template_name = "task/stu_home.html"
     def get_queryset(self):
-        queryset = super().get_queryset()
-        return Assignment.objects.filter(student = self.request.user)
+        queryset = super().get_queryset() # ListViewに則ってget_querysetを実行
+        print(queryset)
+        return queryset.filter(student = self.request.user) # 返してくれた情報をもとに今ログインしている人の情報のみを返す
