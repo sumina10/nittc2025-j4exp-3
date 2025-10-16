@@ -229,6 +229,7 @@ class StudentAdmin(CustomUserAdmin):
                     continue  # 不完全な行はスキップ
                 # TODO: 仕様と一致しない
                 user_id, grade, classroom = row[:3]
+                password = 'defaultpassword'  # デフォルトパスワードを設定
                 if not CustomUser.objects.filter(user_id=user_id).exists():
                     user = Student(
                         user_id=user_id,

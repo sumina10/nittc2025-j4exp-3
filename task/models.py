@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 from accounts.models import Teacher, Student
 
 class ClassRoom(models.Model):
