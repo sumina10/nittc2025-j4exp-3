@@ -1,6 +1,6 @@
 from django.urls import path, include
-from .views import template_test
+from .views import template_test, AuthorCreateView
 
 urlpatterns = [
-    path('', template_test)
+    path("mine/", AuthorCreateView.as_view(), name="my-view"),
 ]
