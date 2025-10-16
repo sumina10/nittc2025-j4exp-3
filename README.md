@@ -128,6 +128,12 @@ classDiagram
         +CourseName
     }
 
+    class ClassRoom {
+        +ClassRoomID
+        +Grade
+        +Class
+    }
+
     class Assignment {
         +AssignmentTitle
         +Description
