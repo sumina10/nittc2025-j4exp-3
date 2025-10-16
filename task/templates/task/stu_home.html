@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+
+    <ul>
+        {% for assignment in object_list %}
+            <li>
+                <strong>タイトル:</strong> {{ assignment.title }} <br>
+                <strong>概要:</strong> {{ assignment.description }} <br>
+                <strong>期限:</strong> {{ assignment.due_date }}
+            </li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
