@@ -1,17 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head></head>
-<body>
+{% extends "task/base.html" %}
 
-    <ul>
-        {% for assignment in object_list %}
-            <li>
-                <strong>タイトル:</strong> {{ assignment.title }} <br>
-                <strong>概要:</strong> {{ assignment.description }} <br>
-                <strong>期限:</strong> {{ assignment.due_date }}
-            </li>
-        {% endfor %}
-    </ul>
+{% block title %}
+    課題提出一覧
+{% endblock title %}
 
-</body>
-</html>
+{% block content %}
+    <div class="container my-4">
+        <h2>提出課題一覧</h2>
+        <table class="table table-bordered text-center align-middle">
+            <thead>
+                <tr>
+                    <th width="10%">締め切り</th>
+                    <th width="10%">科目</th>
+                    <th width="50%">課題内容</th>
+                    <th width="20%">ステータス</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in object_list %}
+                <tr>
+                    <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
+                    <td>{{ assignment.subject }}</td>
+                    <td>{{ assignment.title }}</td>
+                    <td>
+                        <span class="status-icon status-{{ assignment.status_class }}"></span>
+                        {{ assignment.status_display }}
+                        <span class="action-icon">⋯</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">現在、提出すべき課題はありません．</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock content %}

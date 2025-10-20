@@ -12,8 +12,8 @@ class CreateAssignment(CreateView, LoginRequiredMixin):
     model = Assignment
     fields = ["title","description","course"] # studentはログインしている人のIDを使うためあとで付け足し
     template_name = "task/registration.html"
-    
-    success_url = reverse_lazy('task-create') # 'create'はリダイレクト先のURLパターン名
+
+    success_url = reverse_lazy('task-create') # 'task-create'はリダイレクト先のURLパターン名
 
     def form_valid(self, form):
         # print("--- ログインした人の情報 ---\n")
