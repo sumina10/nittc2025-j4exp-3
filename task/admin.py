@@ -12,7 +12,7 @@ class ClassRoomAdmin(admin.ModelAdmin):
 
     def get_title(self, obj):
         """クラスルームの表示"""
-        return f"{obj.grade}-{obj.class_number}"
+        return obj.__str__()
     
     def get_teachers(self, obj):
         """担当教員の表示"""
@@ -28,9 +28,12 @@ class ClassRoomAdmin(admin.ModelAdmin):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """科目管理画面の設定"""
-    list_display = ('title', 'get_teachers', 'get_assignments_count')
+    list_display = ('get_title', 'get_teachers', 'get_assignments_count')
     search_fields = ('title', 'teachers__last_name', 'teachers__first_name')
     filter_horizontal = ('teachers',)
+
+    def get_title(self, obj):
+        return obj.__str__()
     
     def get_teachers(self, obj):
         """担当教員の表示"""
