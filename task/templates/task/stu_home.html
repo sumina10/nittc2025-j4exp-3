@@ -23,8 +23,8 @@
                     <td>{{ assignment.course }}</td>
                     <td>{{ assignment.title }}</td>
                     <td>
-                        <span class="status-icon status-{{ assignment.status_class }}"></span>
-                        {{ assignment.status_display }}
+                        <span class="status-icon status-{{ assignment.status }}"></span>
+                        {{ assignment.get_status_display }}
                         <span class="action-icon">⋯</span>
                     </td>
                 </tr>
