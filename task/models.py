@@ -5,17 +5,17 @@ class ClassRoom(models.Model):
     grade = models.SmallIntegerField()
     class_number = models.SmallIntegerField()
     # 教師は多対多
-    teachers = models.ManyToManyField(Teacher, related_name='classrooms_teachers', null=True)
+    teachers = models.ManyToManyField(Teacher, related_name='classrooms_teachers', blank=True)
     # 生徒は拡張性を考慮して多対多
-    students = models.ManyToManyField(Student, related_name='classrooms_students', null=True)
+    students = models.ManyToManyField(Student, related_name='classrooms_students', blank=True)
 
     def __str__(self):
         return f"{self.grade}-{self.class_number}"
 
 class Course(models.Model):
     title = models.CharField(max_length=16)
-    teachers = models.ManyToManyField(Teacher, related_name='courses_teachers', null=True)
-    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='courses', null=True)
+    teachers = models.ManyToManyField(Teacher, related_name='courses_teachers', blank=True)
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='courses', blank=True)
 
     def __str__(self):
         return self.classroom.__str__() + ":" + self.title
@@ -30,7 +30,7 @@ class Assignment(models.Model):
     ]
 
     title = models.CharField(max_length=16)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     due_date = models.DateTimeField(auto_now=False)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=0)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='assignments')

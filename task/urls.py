@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import template_test
+from .views import CreateAssignment, CreateStudentHome
+from django.urls import path
 
 urlpatterns = [
-    path('', template_test)
+    path('create/',CreateAssignment.as_view(),name='task-create'),
+    path('stu_home/',CreateStudentHome.as_view(),name='stu-home')
 ]
