@@ -20,7 +20,7 @@
                 {% for assignment in object_list %}
                 <tr>
                     <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
-                    <td>{{ assignment.subject }}</td>
+                    <td>{{ assignment.course }}</td>
                     <td>{{ assignment.title }}</td>
                     <td>
                         <span class="status-icon status-{{ assignment.status_class }}"></span>
