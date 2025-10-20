@@ -5,14 +5,18 @@ from .models import ClassRoom, Course, Assignment
 @admin.register(ClassRoom)
 class ClassRoomAdmin(admin.ModelAdmin):
     """クラスルーム管理画面の設定"""
-    list_display = ('title', 'get_teachers', 'get_students_count')
-    search_fields = ('title', 'teachers__last_name', 'teachers__first_name', 
+    list_display = ('get_title', 'get_teachers', 'get_students_count')
+    search_fields = ('teachers__last_name', 'teachers__first_name', 
                     'students__last_name', 'students__first_name')
     filter_horizontal = ('teachers', 'students')
+
+    def get_title(self, obj):
+        """クラスルームの表示"""
+        return obj.__str__()
     
     def get_teachers(self, obj):
         """担当教員の表示"""
-        return ", ".join([f"{t.last_name} {t.first_name}" for t in obj.teachers.all()])
+        return ", ".join([f"{t.user_id}" for t in obj.teachers.all()])
     get_teachers.short_description = _('担当教員')
     
     def get_students_count(self, obj):
@@ -24,9 +28,12 @@ class ClassRoomAdmin(admin.ModelAdmin):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """科目管理画面の設定"""
-    list_display = ('title', 'get_teachers', 'get_assignments_count')
+    list_display = ('get_title', 'get_teachers', 'get_assignments_count')
     search_fields = ('title', 'teachers__last_name', 'teachers__first_name')
     filter_horizontal = ('teachers',)
+
+    def get_title(self, obj):
+        return obj.__str__()
     
     def get_teachers(self, obj):
         """担当教員の表示"""

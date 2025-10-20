@@ -2,21 +2,23 @@ from django.db import models
 from accounts.models import Teacher, Student
 
 class ClassRoom(models.Model):
-    title = models.CharField(max_length=16)
+    grade = models.SmallIntegerField()
+    class_number = models.SmallIntegerField()
     # 教師は多対多
-    teachers = models.ManyToManyField(Teacher, related_name='classrooms_teachers')
+    teachers = models.ManyToManyField(Teacher, related_name='classrooms_teachers', null=True)
     # 生徒は拡張性を考慮して多対多
-    students = models.ManyToManyField(Student, related_name='classrooms_students')
+    students = models.ManyToManyField(Student, related_name='classrooms_students', null=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.grade}-{self.class_number}"
 
 class Course(models.Model):
     title = models.CharField(max_length=16)
-    teachers = models.ManyToManyField(Teacher, related_name='courses_teachers')
+    teachers = models.ManyToManyField(Teacher, related_name='courses_teachers', null=True)
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='courses', null=True)
 
     def __str__(self):
-        return self.title
+        return self.classroom.__str__() + ":" + self.title
 
 class Assignment(models.Model):
     STATUS_CHOICES = [
