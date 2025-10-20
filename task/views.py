@@ -5,5 +5,5 @@ from django.shortcuts import render
 def template_test(request):
     return render(
         request,
-        "task/base.html"
+        "task/tuti.html"
     )
