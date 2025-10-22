@@ -1,18 +1,19 @@
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic import ListView
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from accounts.models import Teacher, Student
+from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
 from .models import Assignment, Course, ClassRoom
 from .forms import AssignmentForm
 
 
 # Create your views here.
 
-class CreateAssignment(LoginRequiredMixin, CreateView):
+class CreateAssignment(LoginRequiredMixin, StudentRequiredMixin, CreateView):
     model = Assignment
     form_class = AssignmentForm
     template_name = "task/registration.html"
@@ -33,19 +34,16 @@ class CreateAssignment(LoginRequiredMixin, CreateView):
         # combined_data['due_date'] = form.instance.due_date
         return super().form_valid(form)
 
-class StudentAssignmentView(LoginRequiredMixin, PermissionRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
+class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
     model = Assignment
     template_name = "task/student_home.html"
-    permission_required = 'task.view_assignment'  # 必要な権限を指定
 
     def get_queryset(self):
-        queryset = super().get_queryset() # ListViewに則ってget_querysetを実行
-        return queryset.filter(student = self.request.user) # 返してくれた情報をもとに今ログインしている人の情報のみを返す
-    
-class TeacherAssignmentView(LoginRequiredMixin, PermissionRequiredMixin, ListView): #TeacherAssignmentViewがListViewとLoginRequiredMixinを継承
+        return super().get_queryset().filter(student=self.request.user)
+
+class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView): #TeacherAssignmentViewがListViewとLoginRequiredMixinを継承
     model = Assignment
     template_name = "task/teacher_home.html"
-    permission_required = 'task.view_student_assignment'  # 必要な権限を指定
 
     def get_queryset(self):
         if not self.request.user.is_teacher:
