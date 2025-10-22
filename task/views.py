@@ -31,7 +31,7 @@ class CreateAssignment(LoginRequiredMixin, CreateView):
         # combined_data['due_date'] = form.instance.due_date
         return super().form_valid(form)
 
-class CreateStudentHome(LoginRequiredMixin,ListView): #CreateStudentHomeがListViewとLoginRequiredMixinを継承
+class StudentAssignmentView(LoginRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
     model = Assignment
     template_name = "task/stu_home.html"
 
