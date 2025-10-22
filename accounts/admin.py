@@ -160,7 +160,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         if obj is None:
             defaults['form'] = self.add_form
         defaults.update(kwargs)
-        return super().get_form(request, obj, **kwargs)
+        return super().get_form(request, obj, **defaults)
 
     def get_fieldsets(self, request, obj=None):
         """
@@ -188,6 +188,14 @@ class TeacherAdmin(CustomUserAdmin):
         """教員として保存する際に、is_teacherを自動設定"""
         obj.is_teacher = True
         super().save_model(request, obj, form, change)
+    
+    def get_fieldsets(self, request, obj=None):
+        """
+        新規作成時のフィールドセット（教員用）
+        """
+        if not obj:
+            return [(None, {'fields': ('user_id', 'first_name', 'last_name', 'password1', 'password2')})]
+        return super().get_fieldsets(request, obj)
 
     """CSVインポートアクションの追加"""
     def import_csv(self, request):
@@ -269,6 +277,14 @@ class StudentAdmin(CustomUserAdmin):
         """学生として保存する際に、is_teacherを自動設定"""
         obj.is_teacher = False
         super().save_model(request, obj, form, change)
+    
+    def get_fieldsets(self, request, obj=None):
+        """
+        新規作成時のフィールドセット（学生用）
+        """
+        if not obj:
+            return [(None, {'fields': ('user_id', 'password1', 'password2')})]
+        return super().get_fieldsets(request, obj)
 
     """CSVインポートアクションの追加"""
     def import_csv(self, request):
