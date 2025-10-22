@@ -1,1 +1,20 @@
-<b>ログアウトしたよ!?</b>
+{% extends "accounts/base.html" %}
+
+{% block title %} ログアウト {% endblock %}
+{% block header_title %} ログアウト {% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="alert alert-success text-center" role="alert">
+                <strong>ログアウトしました。</strong>
+            </div>
+
+            <div class="text-center">
+                <a href="{% url 'login' %}" class="btn btn-primary">ログインページへ戻る</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

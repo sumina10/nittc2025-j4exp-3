@@ -1,0 +1,134 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}プロフィール{% endblock %}
+
+{% block header_title %}プロフィール{% endblock %}
+
+{% block header_button %}
+<form action="{% url 'logout' %}" method="post" style="display: inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-light">ログアウト</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-person-circle"></i> ユーザー情報
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>ユーザーID:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ profile_user.user_id }}
+                        </div>
+                    </div>
+
+                    {% if profile_user.is_teacher %}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>氏名:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ profile_user.last_name }} {{ profile_user.first_name }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>ユーザー種別:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {% if profile_user.is_teacher %}
+                            <span class="badge bg-success">教員</span>
+                            {% else %}
+                            <span class="badge bg-info">学生</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if profile_user.is_superuser %}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>権限:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="badge bg-danger">管理者</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>登録日:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ profile_user.date_joined|date:"Y年m月d日 H:i" }}
+                        </div>
+                    </div>
+
+                    {% if not profile_user.is_teacher %}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>所属クラス:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <ul class="list-unstyled mb-0">
+                                {% for classroom in classrooms %}
+                                <li>{{ classroom }}</li>
+                                {% empty %}
+                                <li>未担当</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>担当クラス:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <ul class="list-unstyled mb-0">
+                                {% for classroom in classrooms %}
+                                <li>{{ classroom }}</li>
+                                {% empty %}
+                                <li>未担当</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if profile_user.is_teacher %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'password_change' %}" class="btn btn-warning me-2">
+                        <i class="bi bi-key"></i> パスワード変更
+                    </a>
+                    <!-- TODO: 教師用のホームに -->
+                    <a href="{% url 'stu-home' %}" class="btn btn-primary">
+                        ホームに戻る
+                    </a>
+                </div>
+                {% else %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'password_change' %}" class="btn btn-warning me-2">
+                        <i class="bi bi-key"></i> パスワード変更
+                    </a>
+                    <a href="{% url 'stu-home' %}" class="btn btn-primary">
+                        ホームに戻る
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
