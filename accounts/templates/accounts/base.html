@@ -11,12 +11,17 @@
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
     <style>
+        :root {
+            --bs-primary: #00587A;
+            --bs-primary-rgb: 0, 88, 122;
+        }
+
         body {
             background-color: #ffffff;
         }
 
         .header {
-            background-color: #00587A;
+            background-color: var(--bs-primary);
             color: white;
             padding: 1rem;
             display: flex;
@@ -74,6 +79,9 @@
     <div class="header">
         <h1>{% block header_title %}学生用HOME{% endblock %}</h1>
         <div>
+            {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}" class="btn btn-outline-light me-2">プロフィール</a>
+            {% endif %}
             {% block header_button %}
             {% endblock %}
         </div>

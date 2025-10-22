@@ -3,14 +3,18 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError, MultipleObjectsReturned, ObjectDoesNotExist
 from django import forms
 from django.shortcuts import render
-from django.urls import path
+from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
+from django.http import HttpResponseRedirect
 import csv
 import io
 from .models import CustomUser, Teacher, Student
 from task.models import ClassRoom
 from .forms import CsvImportForm
+from django.contrib.auth.forms import AdminPasswordChangeForm
+from django.contrib.admin.utils import unquote
+from django.template.response import TemplateResponse
 
 
 # Register your models here.
@@ -94,6 +98,60 @@ class CustomUserAdmin(admin.ModelAdmin):
         }),
     )
     
+    def get_urls(self):
+        """パスワード変更用のURLを追加"""
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<id>/password/',
+                self.admin_site.admin_view(self.user_change_password),
+                name='auth_user_password_change',
+            ),
+        ]
+        return custom_urls + urls
+    
+    def user_change_password(self, request, id, form_url=''):
+        """パスワード変更ビュー"""
+        user = self.get_object(request, unquote(id))
+        if request.method == 'POST':
+            form = AdminPasswordChangeForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                change_message = _('パスワードを変更しました。')
+                self.log_change(request, user, change_message)
+                msg = _('パスワードが正常に変更されました。')
+                messages.success(request, msg)
+                return HttpResponseRedirect('..')
+        else:
+            form = AdminPasswordChangeForm(user)
+
+        fieldsets = [(None, {'fields': list(form.base_fields)})]
+        adminForm = admin.helpers.AdminForm(form, fieldsets, {})
+
+        context = {
+            'title': _('%s のパスワード変更') % user.user_id,
+            'adminForm': adminForm,
+            'form_url': form_url,
+            'form': form,
+            'add': True,
+            'change': False,
+            'has_delete_permission': False,
+            'has_change_permission': True,
+            'has_absolute_url': False,
+            'opts': self.model._meta,
+            'original': user,
+            'save_as': False,
+            'show_save': True,
+        }
+        
+        request.current_app = self.admin_site.name
+
+        return TemplateResponse(
+            request,
+            'admin/auth/user/change_password.html',
+            context,
+        )
+    
     def get_form(self, request, obj=None, **kwargs):
         """
         新規作成時には別のフォームを使用
@@ -102,7 +160,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         if obj is None:
             defaults['form'] = self.add_form
         defaults.update(kwargs)
-        return super().get_form(request, obj, **defaults)
+        return super().get_form(request, obj, **kwargs)
 
     def get_fieldsets(self, request, obj=None):
         """
