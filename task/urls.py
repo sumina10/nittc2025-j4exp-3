@@ -1,6 +1,5 @@
-from django.urls import path,include
-from .views import CreateAssignment
-from .views import CreateStudentHome
+from django.urls import path
+from .views import CreateAssignment, CreateStudentHome
 
 urlpatterns = [
     path('create/',CreateAssignment.as_view(),name='task-create'),

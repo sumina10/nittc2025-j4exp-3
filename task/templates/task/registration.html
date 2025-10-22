@@ -1,5 +1,44 @@
-<form action="" method="POST">
-    {% csrf_token %}
-    {{form.as_p}}
-    <button type="submit">押せ!!!</button>
-</form>
+{% extends "task/base.html" %}
+
+{% block title %}
+    フォームページ
+{% endblock title %}
+
+{% block content %}
+    <div class="container my-5">
+        <div class="card shadow-sm p-4 mx-auto" style="max-width: 600px;">
+            <h2 class="card-title text-center mb-4">課題登録</h2>
+            
+            <form action="" method="POST">
+                {% csrf_token %}
+
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                            <span class="text-danger">*</span>
+                        {% endif %}
+                    </label>
+                    
+                    {{ field }} 
+
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger p-1 mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        押せ!!!
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
