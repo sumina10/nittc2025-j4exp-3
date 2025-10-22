@@ -52,8 +52,9 @@ class TeacherAssignmentView(LoginRequiredMixin, PermissionRequiredMixin, ListVie
             raise PermissionDenied
         
         # 担当しているコースまたはクラスルームの学生を取得
+        # コース経由で学生を取得する場合: course -> classroom -> students
         students = Student.objects.filter(
-            Q(courses__teachers=self.request.user) | 
+            Q(classrooms_students__courses__teachers=self.request.user) | 
             Q(classrooms_students__teachers=self.request.user)
         ).distinct()
         
