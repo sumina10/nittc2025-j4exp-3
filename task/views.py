@@ -3,6 +3,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
+from django.http import Http404
 
 from .models import Assignment
 
@@ -37,5 +38,14 @@ class CreateStudentHome(ListView,LoginRequiredMixin): #CreateStudentHomeがListV
     template_name = "task/stu_home.html"
     def get_queryset(self):
         queryset = super().get_queryset() # ListViewに則ってget_querysetを実行
-        print(queryset)
+        #print(queryset)
+        if not queryset.filter(student = self.request.user).exists():
+            # データがない場合は代替のQuerySetを返す
+            Nodata = Assignment(
+                title = "課題データがありません",
+                description="データがありません",
+                due_date = "データがありません"
+            )
+            return [Nodata]
+        
         return queryset.filter(student = self.request.user) # 返してくれた情報をもとに今ログインしている人の情報のみを返す
