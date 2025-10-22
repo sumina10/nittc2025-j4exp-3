@@ -3,6 +3,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
+from django.http import Http404
 
 from .models import Assignment
 from .forms import AssignmentForm
@@ -30,7 +31,7 @@ class CreateAssignment(LoginRequiredMixin, CreateView):
         # combined_data['due_date'] = form.instance.due_date
         return super().form_valid(form)
 
-class CreateStudentHome(LoginRequiredMixin,ListView): #CreateStudentHomeがListViewとLoginRequiredMixinを継承
+class StudentAssignmentView(LoginRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
     model = Assignment
     template_name = "task/stu_home.html"
 
