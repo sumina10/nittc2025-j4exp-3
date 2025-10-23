@@ -2,15 +2,18 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.utils import timezone
-from django.http import Http404
-
-from .models import Assignment
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from django.core.exceptions import PermissionDenied
+from accounts.models import Teacher, Student
+from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
+from .models import Assignment, Course, ClassRoom
 from .forms import AssignmentForm
+
 
 # Create your views here.
 
-class CreateAssignment(LoginRequiredMixin, CreateView):
+class CreateAssignment(LoginRequiredMixin, StudentRequiredMixin, CreateView):
     model = Assignment
     form_class = AssignmentForm
     template_name = "task/registration.html"
@@ -31,10 +34,27 @@ class CreateAssignment(LoginRequiredMixin, CreateView):
         # combined_data['due_date'] = form.instance.due_date
         return super().form_valid(form)
 
-class StudentAssignmentView(LoginRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
+class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
     model = Assignment
-    template_name = "task/stu_home.html"
+    template_name = "task/student_home.html"
 
     def get_queryset(self):
-        queryset = super().get_queryset() # ListViewに則ってget_querysetを実行
-        return queryset.filter(student = self.request.user) # 返してくれた情報をもとに今ログインしている人の情報のみを返す
+        return super().get_queryset().filter(student=self.request.user)
+
+class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView): #TeacherAssignmentViewがListViewとLoginRequiredMixinを継承
+    model = Assignment
+    template_name = "task/teacher_home.html"
+
+    def get_queryset(self):
+        if not self.request.user.is_teacher:
+            raise PermissionDenied
+        
+        # 担当しているコースまたはクラスルームの学生を取得
+        # コース経由で学生を取得する場合: course -> classroom -> students
+        students = Student.objects.filter(
+            Q(classrooms_students__courses__teachers=self.request.user) | 
+            Q(classrooms_students__teachers=self.request.user)
+        ).distinct()
+        
+        # 担当している学生の課題を返す
+        return super().get_queryset().filter(student__in=students)

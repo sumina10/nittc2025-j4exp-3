@@ -123,10 +123,6 @@ class Teacher(CustomUser):
         proxy = True
         verbose_name = _('教員')
         verbose_name_plural = _('教員')
-        permissions = [
-            ('view_student_progress', '学生の進捗状況を閲覧できる'),
-            ('send_reminders', 'リマインドを送信できる'),
-        ]
     
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -154,12 +150,6 @@ class Student(CustomUser):
         proxy = True
         verbose_name = _('学生')
         verbose_name_plural = _('学生')
-        permissions = [
-            ('create_assignment', '課題を作成できる'),
-            ('update_assignment', '課題を更新できる'),
-            ('delete_assignment', '課題を削除できる'),
-            ('check_status', '課題の状態を確認できる'),
-        ]
     
     def save(self, *args, **kwargs):
         if not self.pk:
