@@ -65,8 +65,8 @@ class SchoolModelTest(TestCase):
     def test_classroom_students_relationship(self):
         """ClassRoomとStudentの多対多リレーションシップを検証"""
         self.assertEqual(self.classroom1.students.count(), 2)
-        self.assertIn(self.student1, self.classroom1.students.all()) # student1はclassroom1に所属
-        self.assertIn(self.student1, self.student1.classrooms_students.all())
+        self.assertIn(self.student1, self.classroom1.students.all())
+        self.assertIn(self.classroom1, self.student1.classrooms_students.all()) # student1がclassroom1に所属していることを逆参照で確認
 
 
     # -----------------------------------------------------------------
