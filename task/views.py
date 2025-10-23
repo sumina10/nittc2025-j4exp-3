@@ -8,14 +8,14 @@ from django.core.exceptions import PermissionDenied
 from accounts.models import Teacher, Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
 from .models import Assignment, Course, ClassRoom
-from .forms import AssignmentForm
+from .forms import AssignmentCreateForm, AssignmentEditForm
 
 
 # Create your views here.
 
 class CreateAssignment(LoginRequiredMixin, StudentRequiredMixin, CreateView):
     model = Assignment
-    form_class = AssignmentForm
+    form_class = AssignmentCreateForm
     template_name = "task/registration.html"
 
     success_url = reverse_lazy('task-create') # 'task-create'はリダイレクト先のURLパターン名
@@ -40,6 +40,18 @@ class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView):
 
     def get_queryset(self):
         return super().get_queryset().filter(student=self.request.user)
+    
+class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, UpdateView):
+    model = Assignment
+    form_class = AssignmentEditForm
+    template_name = "task/assignment_edit.html"
+    success_url = reverse_lazy('student-home')
+
+    def get_object(self, queryset=None):
+        assignment = super().get_object(queryset)
+        if assignment.student != self.request.user:
+            raise PermissionDenied
+        return assignment
 
 class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView): #TeacherAssignmentViewがListViewとLoginRequiredMixinを継承
     model = Assignment
