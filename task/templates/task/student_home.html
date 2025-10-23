@@ -25,7 +25,9 @@
                 <td>
                     <span class="status-icon status-{{ assignment.status }}"></span>
                     {{ assignment.get_status_display }}
-                    <span class="action-icon">⋯</span>
+                    <a href="{% url 'student-assignment-edit' assignment.pk %}" class="action-icon" title="編集">
+                        編集する
+                    </a>
                 </td>
             </tr>
             {% empty %}
