@@ -13,8 +13,9 @@
                 <th width="10%">学生ID</th>
                 <th width="10%">締め切り</th>
                 <th width="10%">科目</th>
+                <th width="20%">タイトル</th>
                 <th width="40%">課題内容</th>
-                <th width="30%">ステータス</th>
+                <th width="10%">ステータス</th>
             </tr>
         </thead>
         <tbody>
@@ -24,10 +25,9 @@
                 <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
                 <td>{{ assignment.course }}</td>
                 <td>{{ assignment.title }}</td>
+                <td>{{ assignment.description }}</td>
                 <td>
-                    <span class="status-icon status-{{ assignment.status }}">
-                        <span class="visually-hidden">{{ assignment.get_status_display }}</span>
-                    </span>
+                    {{ assignment.get_status_display }}
                 </td>
             </tr>
             {% empty %}
