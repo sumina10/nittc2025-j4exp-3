@@ -1,0 +1,35 @@
+{% extends "task/student_base.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}
+課題編集
+{% endblock title %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow-sm p-4 mx-auto" style="max-width: 600px;">
+        <h2 class="card-title text-center mb-4">課題編集</h2>
+
+        <form action="" method="POST">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            {% bootstrap_form form %}
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    更新する
+                </button>
+                <a href="{% url 'student-home' %}" class="btn btn-secondary">
+                    キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
