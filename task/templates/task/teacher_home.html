@@ -25,7 +25,7 @@
                 <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
                 <td>{{ assignment.course }}</td>
                 <td>{{ assignment.title }}</td>
-                <td>{{ assignment.description }}</td>
+                <td>{{ assignment.description | escape }}</td>
                 <td>
                     {{ assignment.get_status_display }}
                 </td>

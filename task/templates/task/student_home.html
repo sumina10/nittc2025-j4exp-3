@@ -28,7 +28,7 @@
                     </a>
                 </td>
                 <td>
-                    {{ assignment.description }}
+                    {{ assignment.description | escape }}
                 </td>
                 <td>
                     {{ assignment.get_status_display }}
