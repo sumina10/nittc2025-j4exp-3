@@ -17,10 +17,10 @@ class TaskViewsTest(TestCase):
         テストケース全体で利用するデータを一度だけ設定
         """
         # ユーザーの作成
-        cls.teacher1 = Teacher.objects.create_user(user_id='teacher1', first_name='Teacher', last_name='One', password='password', is_teacher=True)
-        cls.teacher2 = Teacher.objects.create_user(user_id='teacher2', first_name='Teacher', last_name='Two', password='password', is_teacher=True)
-        cls.student1 = Student.objects.create_user(user_id='student1', first_name='Student', last_name='One', password='password')
-        cls.student2 = Student.objects.create_user(user_id='student2', first_name='Student', last_name='Two', password='password')
+        cls.teacher1 = Teacher.objects.create_user(user_id='teacher1', password='password', is_teacher=True)
+        cls.teacher2 = Teacher.objects.create_user(user_id='teacher2', password='password', is_teacher=True)
+        cls.student1 = Student.objects.create_user(user_id='student1', password='password')
+        cls.student2 = Student.objects.create_user(user_id='student2', password='password')
 
         # クラスルームとコースの作成
         cls.classroom1 = ClassRoom.objects.create(grade=1, class_number=1)
@@ -62,14 +62,14 @@ class TaskViewsTest(TestCase):
 
     def test_create_assignment_view_for_student(self):
         """学生が課題作成ページにアクセスできることを確認"""
-        self.client.login(username='student1', password='password')
+        self.client.login(user_id='student1', password='password')
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'task/registration.html')
 
     def test_create_assignment_view_for_teacher_is_forbidden(self):
         """教員は課題作成ページにアクセスできないことを確認"""
-        self.client.login(username='teacher1', password='password')
+        self.client.login(user_id='teacher1', password='password')
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 403) # PermissionDenied
 
@@ -81,12 +81,12 @@ class TaskViewsTest(TestCase):
 
     def test_create_assignment_post(self):
         """学生が課題を正常に作成できることを確認"""
-        self.client.login(username='student1', password='password')
+        self.client.login(user_id='student1', password='password')
         assignment_count = Assignment.objects.count()
         form_data = {
             'title': 'New Assignment',
             'description': 'This is a new assignment.',
-            'due_date': timezone.now(),
+            'due_date': timezone.now().strftime('%Y-%m-%dT%H:%M'),
             'course': self.course1.id,
         }
         response = self.client.post(self.create_url, form_data)
@@ -106,14 +106,14 @@ class TaskViewsTest(TestCase):
 
     def test_student_home_view_for_student(self):
         """学生が自身の課題一覧ページにアクセスできることを確認"""
-        self.client.login(username='student1', password='password')
+        self.client.login(user_id='student1', password='password')
         response = self.client.get(self.student_home_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'task/student_home.html')
 
     def test_student_home_view_queryset(self):
         """学生の課題一覧に自身の課題のみが表示されることを確認"""
-        self.client.login(username='student1', password='password')
+        self.client.login(user_id='student1', password='password')
         response = self.client.get(self.student_home_url)
         self.assertEqual(response.status_code, 200)
         
@@ -125,7 +125,7 @@ class TaskViewsTest(TestCase):
 
     def test_student_home_view_for_teacher_is_forbidden(self):
         """教員は学生の課題一覧ページにアクセスできないことを確認"""
-        self.client.login(username='teacher1', password='password')
+        self.client.login(user_id='teacher1', password='password')
         response = self.client.get(self.student_home_url)
         self.assertEqual(response.status_code, 403)
 
@@ -135,14 +135,14 @@ class TaskViewsTest(TestCase):
 
     def test_teacher_home_view_for_teacher(self):
         """教員が担当学生の課題一覧ページにアクセスできることを確認"""
-        self.client.login(username='teacher1', password='password')
+        self.client.login(user_id='teacher1', password='password')
         response = self.client.get(self.teacher_home_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'task/teacher_home.html')
 
     def test_teacher_home_view_queryset(self):
         """教員の課題一覧に担当学生の課題のみが表示されることを確認"""
-        self.client.login(username='teacher1', password='password')
+        self.client.login(user_id='teacher1', password='password')
         response = self.client.get(self.teacher_home_url)
         self.assertEqual(response.status_code, 200)
 
@@ -154,14 +154,14 @@ class TaskViewsTest(TestCase):
 
     def test_teacher_home_view_for_student_is_forbidden(self):
         """学生は教員の課題一覧ページにアクセスできないことを確認"""
-        self.client.login(username='student1', password='password')
+        self.client.login(user_id='student1', password='password')
         response = self.client.get(self.teacher_home_url)
         self.assertEqual(response.status_code, 403)
 
     def test_teacher_home_view_for_unrelated_teacher(self):
         """担当外の教員は、他人の担当学生の課題を閲覧できないことを確認"""
         # teacher2でログイン（student1の担当ではない）
-        self.client.login(username='teacher2', password='password')
+        self.client.login(user_id='teacher2', password='password')
         response = self.client.get(self.teacher_home_url)
         self.assertEqual(response.status_code, 200)
 
