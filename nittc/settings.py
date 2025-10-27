@@ -10,24 +10,27 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import environ
+
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env()
-env.read_env(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env')
+env = os.environ
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', default=False)
+DEBUG = env.get('DEBUG', False)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS = env.get('ALLOWED_HOSTS', default='').split(',')
 
 
 # Application definition
@@ -79,12 +82,12 @@ WSGI_APPLICATION = 'nittc.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': env('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': env('DB_NAME', default=BASE_DIR / 'db.sqlite3'),
-        'USER': env('DB_USER', default=''),
-        'PASSWORD': env('DB_PASSWORD', default=''),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='3306'),
+        'ENGINE': env.get('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': env.get('DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'USER': env.get('DB_USER', ''),
+        'PASSWORD': env.get('DB_PASSWORD', ''),
+        'HOST': env.get('DB_HOST', 'localhost'),
+        'PORT': env.get('DB_PORT', '3306'),
     }
 }
 
