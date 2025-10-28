@@ -29,7 +29,7 @@ SECRET_KEY = env.get('SECRET_KEY')
 FORCE_SCRIPT_NAME = env.get('FORCE_SCRIPT_NAME', None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.get('DEBUG', 'False') == 'True'
+DEBUG = (env.get('DEBUG', 'False') == 'True')
 
 ALLOWED_HOSTS = env.get('ALLOWED_HOSTS', default='').split(',')
 
