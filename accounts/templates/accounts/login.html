@@ -1,4 +1,8 @@
 {% extends "accounts/base.html" %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
 
 {% block title %} ログイン {% endblock %}
 {% block header_title %} ログイン {% endblock %}
@@ -14,9 +18,9 @@
                 <div class="card-body">
                     <form method="post" novalidate>
                         {% csrf_token %}
-                        {{ form.as_p }}
+                        {% bootstrap_form form %}
                         <div class="mb-3">
-                            <button type="submit" class="btn btn-primary">ログイン</button>
+                            {% bootstrap_button button_type="submit" content="ログイン" %}
                         </div>
                     </form>
                 </div>

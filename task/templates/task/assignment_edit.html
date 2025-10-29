@@ -1,6 +1,9 @@
 {% extends "task/student_base.html" %}
 {% load django_bootstrap5 %}
 
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
 {% block title %}
 課題編集
 {% endblock title %}
@@ -13,12 +16,7 @@
         <form action="" method="POST">
             {% csrf_token %}
 
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                {{ form.non_field_errors }}
-            </div>
-            {% endif %}
-
+            {% bootstrap_form_errors form %}
             {% bootstrap_form form %}
 
             <div class="d-grid gap-2 mt-4">
