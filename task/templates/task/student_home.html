@@ -1,0 +1,45 @@
+{% extends "task/student_base.html" %}
+
+{% block title %}
+課題提出一覧
+{% endblock title %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>提出課題一覧</h2>
+    <table class="table table-bordered text-center align-middle">
+        <thead>
+            <tr>
+                <th width="10%">締め切り</th>
+                <th width="10%">科目</th>
+                <th width="10%">タイトル</th>
+                <th width="40%">課題内容</th>
+                <th width="20%">ステータス</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assignment in object_list %}
+            <tr>
+                <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
+                <td>{{ assignment.course }}</td>
+                <td>
+                    <a href="{% url 'student-assignment-edit' assignment.pk %}" class="action-icon" title="編集">
+                        {{ assignment.title }}
+                    </a>
+                </td>
+                <td>
+                    {{ assignment.description | escape }}
+                </td>
+                <td>
+                    {{ assignment.get_status_display }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">現在、提出すべき課題はありません．</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

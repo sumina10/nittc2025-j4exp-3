@@ -3,7 +3,7 @@ from django import forms
 
 from .models import Assignment, Course
 
-class AssignmentForm(forms.ModelForm):
+class AssignmentCreateForm(forms.ModelForm):
     class Meta:
         model = Assignment
         fields = ['title', 'description', 'due_date', 'course']
@@ -17,3 +17,11 @@ class AssignmentForm(forms.ModelForm):
         self.fields['course'].queryset = Course.objects.filter(
             classroom__students=user
         ).distinct()
+
+class AssignmentEditForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = ['title', 'description', 'due_date', 'status']
+        widgets = {
+            'due_date': DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+        }
