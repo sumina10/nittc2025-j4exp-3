@@ -11,7 +11,7 @@ import csv
 import io
 from .models import CustomUser, Teacher, Student
 from task.models import ClassRoom
-from .forms import CsvImportForm
+from .forms import UserCsvImportForm
 from django.contrib.auth.forms import AdminPasswordChangeForm
 from django.contrib.admin.utils import unquote
 from django.template.response import TemplateResponse
@@ -174,9 +174,9 @@ class CustomUserAdmin(admin.ModelAdmin):
 class TeacherAdmin(CustomUserAdmin):
     def get_urls(self):
         urls = super().get_urls()
-        urls = [
+        urls += [
             path('import_csv/', self.admin_site.admin_view(self.import_csv), name='teacher_import_csv'),
-        ] + urls
+        ]
         return urls
 
     """教員モデルの管理画面設定"""
@@ -199,51 +199,58 @@ class TeacherAdmin(CustomUserAdmin):
 
     """CSVインポートアクションの追加"""
     def import_csv(self, request):
-        form = CsvImportForm(request.POST, request.FILES)
+        form = UserCsvImportForm(request.POST, request.FILES)
 
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
+            password = form.cleaned_data['password']
+
+            existing_user_ids = set(
+                CustomUser.objects.values_list('user_id', flat=True)
+            )
 
             decoded_file = csv_file.read().decode('utf-8')
             io_string = io.StringIO(decoded_file)
             reader = csv.reader(io_string)
             _header = next(reader)  # ヘッダー行をスキップ
 
+            users_to_create = []
             users_created = 0
             users_failed = 0
 
             for row in reader:
-                if len(row) < 4:
+                if len(row) < 3:
                     users_failed += 1
                     continue  # 不完全な行はスキップ
 
-                raise NotImplementedError
-
-                # TODO: 教師の仕様を確認していない。
-                user_id, first_name, last_name, password = row[:4]
-                if not CustomUser.objects.filter(user_id=user_id).exists():
+                user_id, first_name, last_name = row[:3]
+                if user_id not in existing_user_ids:
                     user = Teacher(
                         user_id=user_id,
                         first_name=first_name,
                         last_name=last_name,
-                        is_teacher=False,
+                        is_teacher=True,
                         is_superuser=False,
                     )
                     user.set_password(password)
-                    user.save()
-                    users_created += 1
+                    users_to_create.append(user)
+                    existing_user_ids.add(user_id)
                 else:
                     users_failed += 1  # 既存ユーザーはスキップ
+
+            if users_to_create:
+                created_users = Teacher.objects.bulk_create(users_to_create)
+                users_created = len(created_users)
+
             self.message_user(
                 request, 
                 f"インポート完了: {users_created} 件のユーザーが作成されました。{users_failed} 件の行がスキップされました。", 
                 level= messages.SUCCESS if users_failed == 0 else messages.WARNING
             )
-            return None  # リダイレクトしない
         context = {
             'form': form,
             'title': _('CSVファイルから教師をインポート'),
-            'csv_format' : _('user_id, first_name, last_name, password'),
+            'csv_format' : _('ユーザーID, 姓, 名'),
             'opts': self.model._meta,
             'has_permission': self.has_change_permission(request),
         }
@@ -263,9 +270,9 @@ class TeacherAdmin(CustomUserAdmin):
 class StudentAdmin(CustomUserAdmin):
     def get_urls(self):
         urls = super().get_urls()
-        urls = [
+        urls += [
             path('import_csv/', self.admin_site.admin_view(self.import_csv), name='student_import_csv'),
-        ] + urls
+        ]
         return urls
 
     """学生モデルの管理画面設定"""
@@ -288,7 +295,7 @@ class StudentAdmin(CustomUserAdmin):
 
     """CSVインポートアクションの追加"""
     def import_csv(self, request):
-        form = CsvImportForm(request.POST, request.FILES)
+        form = UserCsvImportForm(request.POST, request.FILES)
 
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
@@ -298,12 +305,12 @@ class StudentAdmin(CustomUserAdmin):
             reader = csv.reader(io_string)
             _header = next(reader)  # ヘッダー行をスキップ
 
-            # 既存のユーザーIDを事前に取得（1回のクエリ）
+            # 既存のユーザーIDを事前に取得
             existing_user_ids = set(
                 CustomUser.objects.values_list('user_id', flat=True)
             )
             
-            # ClassRoomを事前にキャッシュ（1回のクエリ）
+            # ClassRoomを事前にキャッシュ
             classrooms = {}
             for cr in ClassRoom.objects.all():
                 classrooms[(cr.grade, cr.class_number)] = cr
@@ -374,11 +381,11 @@ class StudentAdmin(CustomUserAdmin):
                 f"インポート完了: {users_created} 件のユーザーが作成されました。{users_failed} 件の行がスキップされました。", 
                 level= messages.SUCCESS if users_failed == 0 else messages.WARNING
             )
-            return None  # リダイレクトしない
+
         context = {
             'form': form,
             'title': _('CSVファイルから学生をインポート'),
-            'csv_format' : _('user_id, first_name, last_name, password'),
+            'csv_format' : _('ユーザーID, 学年, クラス'),
             'opts': self.model._meta,
             'has_permission': self.has_change_permission(request),
         }
