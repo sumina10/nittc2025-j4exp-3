@@ -9,6 +9,7 @@ from accounts.models import Teacher, Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
 from .models import Assignment, Course, ClassRoom
 from .forms import AssignmentCreateForm, AssignmentEditForm
+from auditlog.models import LogEntry
 
 
 # Create your views here.
@@ -70,3 +71,28 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 担当している学生の課題を返す
         return super().get_queryset().filter(student__in=students)
+
+class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
+    """
+    ログイン中の教師（自分自身）の操作ログを表示するビュー
+    """
+    
+    # 1. どのモデル（テーブル）からデータを取得するか
+    model = LogEntry
+    
+    # 2. どのテンプレートを使って表示するか（※新規作成が必要です）
+    template_name = "task/log_for_teacher.html"
+    
+    # 3. テンプレートに渡す変数名
+    context_object_name = 'logs'
+
+    def get_queryset(self):
+        """
+        ListViewが表示するデータセットを定義する．
+        ログイン中の教師 (self.request.user) のログで絞り込む．
+        """
+        # LogEntry.objects.filter(user=self.request.user) と同じ
+        queryset = super().get_queryset()
+        # .filter(user=self.request.user)
+        # 日時の降順（新しい順）で並び替え
+        return queryset.order_by('-timestamp')

@@ -1,0 +1,56 @@
+{% extends "task/teacher_base.html" %}
+
+{% block content %}
+<style>
+    /* ↓ テーブルのレイアウト崩れを防ぐCSSを追加 */
+    .log-table {
+        width: 100%;
+        border-collapse: collapse;
+        /* テーブルのレイアウトアルゴリズムを固定（均等割）にする */
+        table-layout: fixed; 
+    }
+    .log-table th,
+    .log-table td {
+        padding: 8px;
+        border: 1px solid #ccc;
+        /* 長い単語やURLでも強制的に改行する */
+        word-wrap: break-word; 
+    }
+    .log-table thead tr {
+        background-color: #f0f0f0;
+    }
+</style>
+
+<h2>アクティビティログ</h2>
+
+<table class="log-table">
+    <thead>
+        <tr>
+            <th style="width: 15%;">日時</th>
+            <th style="width: 10%;">操作者</th>
+            <th style="width: 15%;">対象モデル</th>
+            <th style="width: 20%;">対象オブジェクト</th>
+            <th style="width: 10%;">操作内容</th>
+            <th style="width: 30%;">変更詳細</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.timestamp|date:"Y/m/d H:i" }}</td>
+            <td>{{ log.actor }}</td>
+            <td>{{ log.content_type.model }}</td>
+            <td>{{ log.object_repr }}</td>
+            <td>{{ log.get_action_display }}</td>
+            
+            <td>{{ log.changes_display_dict }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="padding: 8px; text-align: center;">ログはありません．</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
