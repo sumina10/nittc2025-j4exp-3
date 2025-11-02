@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "auditlog",
     'task',
     'accounts',
     'django_bootstrap5',
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "auditlog.middleware.AuditlogMiddleware",
 ]
 
 ROOT_URLCONF = 'nittc.urls'
@@ -127,3 +129,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # カスタムユーザーモデルの設定
 AUTH_USER_MODEL = 'accounts.CustomUser'
 LOGIN_URL = '/accounts/login/'
+
+AUDITLOG_INCLUDE_ALL_MODELS = True
