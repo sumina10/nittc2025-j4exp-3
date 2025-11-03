@@ -1,5 +1,8 @@
+from django.core.validators import FileExtensionValidator
 from django.forms.widgets import DateTimeInput
+from django.utils.translation import gettext_lazy as _
 from django import forms
+
 
 from .models import Assignment, Course
 
@@ -25,3 +28,16 @@ class AssignmentEditForm(forms.ModelForm):
         widgets = {
             'due_date': DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         }
+
+class CsvImportForm(forms.Form):
+    csv_file = forms.FileField(
+        label=_("CSVファイルを選択"),
+        help_text=_('最大ファイルサイズ: 1MB'),
+        max_length=1 * 1024 * 1024,
+        required=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['csv']
+            )
+        ]
+    )
