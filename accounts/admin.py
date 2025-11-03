@@ -1,20 +1,22 @@
 from django.contrib import admin, messages
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.core.exceptions import ValidationError, MultipleObjectsReturned, ObjectDoesNotExist
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, AdminPasswordChangeForm
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
 from django import forms
 from django.shortcuts import render
-from django.urls import path, reverse
+from django.urls import path
 from django.utils.translation import gettext_lazy as _
-from django.db import transaction, connection
+from django.db import transaction
 from django.http import HttpResponseRedirect
+from django.contrib.admin.utils import unquote
+from django.template.response import TemplateResponse
+
 import csv
 import io
 from .models import CustomUser, Teacher, Student
 from task.models import ClassRoom
 from .forms import UserCsvImportForm
-from django.contrib.auth.forms import AdminPasswordChangeForm
-from django.contrib.admin.utils import unquote
-from django.template.response import TemplateResponse
+
 
 
 # Register your models here.
@@ -204,7 +206,8 @@ class TeacherAdmin(CustomUserAdmin):
 
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
-            password = form.cleaned_data['password']
+            raw_password = form.cleaned_data['password']
+            password = make_password(raw_password)
 
             existing_user_ids = set(
                 CustomUser.objects.values_list('user_id', flat=True)
@@ -232,8 +235,9 @@ class TeacherAdmin(CustomUserAdmin):
                         last_name=last_name,
                         is_teacher=True,
                         is_superuser=False,
+                        password=password,
                     )
-                    user.set_password(password)
+
                     users_to_create.append(user)
                     existing_user_ids.add(user_id)
                 else:
@@ -301,6 +305,8 @@ class StudentAdmin(CustomUserAdmin):
 
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
+            raw_password = form.cleaned_data['password']
+            password = make_password(raw_password)
 
             decoded_file = csv_file.read().decode('utf-8')
             io_string = io.StringIO(decoded_file)
@@ -355,8 +361,8 @@ class StudentAdmin(CustomUserAdmin):
                         last_name='',
                         is_teacher=False,
                         is_superuser=False,
+                        password=password,
                     )
-                    user.set_password(user_id)
                     users_to_create.append(user)
                     student_classroom_mapping.append((user_id, classroom_key))
                     existing_user_ids.add(user_id)  # キャッシュを更新
