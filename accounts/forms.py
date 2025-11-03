@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy as _
 class UserCsvImportForm(forms.Form):
     csv_file = forms.FileField(
         label=_('CSVファイルを選択'),
-        help_text=_('最大ファイルサイズ: 100MB'),
-        max_length=100 * 1024 * 1024,
+        help_text=_('最大ファイルサイズ: 1MB'),
+        max_length=1 * 1024 * 1024,
         required=True,
         validators=[
             FileExtensionValidator(
