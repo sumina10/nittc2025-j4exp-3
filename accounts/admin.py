@@ -128,11 +128,11 @@ class CustomUserAdmin(admin.ModelAdmin):
             form = AdminPasswordChangeForm(user)
 
         fieldsets = [(None, {'fields': list(form.base_fields)})]
-        adminForm = admin.helpers.AdminForm(form, fieldsets, {})
+        admin_form = admin.helpers.AdminForm(form, fieldsets, {})
 
         context = {
             'title': _('%s のパスワード変更') % user.user_id,
-            'adminForm': adminForm,
+            'adminForm': admin_form,
             'form_url': form_url,
             'form': form,
             'add': True,
