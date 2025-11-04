@@ -1,20 +1,22 @@
 from django.contrib import admin, messages
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.core.exceptions import ValidationError, MultipleObjectsReturned, ObjectDoesNotExist
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, AdminPasswordChangeForm
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
 from django import forms
 from django.shortcuts import render
-from django.urls import path, reverse
+from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
 from django.http import HttpResponseRedirect
+from django.contrib.admin.utils import unquote
+from django.template.response import TemplateResponse
+
 import csv
 import io
 from .models import CustomUser, Teacher, Student
 from task.models import ClassRoom
-from .forms import CsvImportForm
-from django.contrib.auth.forms import AdminPasswordChangeForm
-from django.contrib.admin.utils import unquote
-from django.template.response import TemplateResponse
+from .forms import UserCsvImportForm
+
 
 
 # Register your models here.
@@ -173,10 +175,11 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 class TeacherAdmin(CustomUserAdmin):
     def get_urls(self):
-        urls = super().get_urls()
+        # 前方が優先であるため、前方に配置する。
         urls = [
             path('import_csv/', self.admin_site.admin_view(self.import_csv), name='teacher_import_csv'),
-        ] + urls
+        ]
+        urls += super().get_urls()
         return urls
 
     """教員モデルの管理画面設定"""
@@ -199,51 +202,60 @@ class TeacherAdmin(CustomUserAdmin):
 
     """CSVインポートアクションの追加"""
     def import_csv(self, request):
-        form = CsvImportForm(request.POST, request.FILES)
+        form = UserCsvImportForm(request.POST, request.FILES)
 
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
+            raw_password = form.cleaned_data['password']
+            password = make_password(raw_password)
+
+            existing_user_ids = set(
+                CustomUser.objects.values_list('user_id', flat=True)
+            )
 
             decoded_file = csv_file.read().decode('utf-8')
             io_string = io.StringIO(decoded_file)
             reader = csv.reader(io_string)
             _header = next(reader)  # ヘッダー行をスキップ
 
+            users_to_create = []
             users_created = 0
             users_failed = 0
 
             for row in reader:
-                if len(row) < 4:
+                if len(row) < 3:
                     users_failed += 1
                     continue  # 不完全な行はスキップ
 
-                raise NotImplementedError
-
-                # TODO: 教師の仕様を確認していない。
-                user_id, first_name, last_name, password = row[:4]
-                if not CustomUser.objects.filter(user_id=user_id).exists():
+                user_id, first_name, last_name = row[:3]
+                if user_id not in existing_user_ids:
                     user = Teacher(
                         user_id=user_id,
                         first_name=first_name,
                         last_name=last_name,
-                        is_teacher=False,
+                        is_teacher=True,
                         is_superuser=False,
+                        password=password,
                     )
-                    user.set_password(password)
-                    user.save()
-                    users_created += 1
+
+                    users_to_create.append(user)
+                    existing_user_ids.add(user_id)
                 else:
                     users_failed += 1  # 既存ユーザーはスキップ
+
+            if users_to_create:
+                created_users = Teacher.objects.bulk_create(users_to_create)
+                users_created = len(created_users)
+
             self.message_user(
                 request, 
                 f"インポート完了: {users_created} 件のユーザーが作成されました。{users_failed} 件の行がスキップされました。", 
                 level= messages.SUCCESS if users_failed == 0 else messages.WARNING
             )
-            return None  # リダイレクトしない
         context = {
             'form': form,
             'title': _('CSVファイルから教師をインポート'),
-            'csv_format' : _('user_id, first_name, last_name, password'),
+            'csv_format' : _('ユーザーID, 姓, 名'),
             'opts': self.model._meta,
             'has_permission': self.has_change_permission(request),
         }
@@ -262,10 +274,11 @@ class TeacherAdmin(CustomUserAdmin):
 
 class StudentAdmin(CustomUserAdmin):
     def get_urls(self):
-        urls = super().get_urls()
+        # 前方が優先であるため、前方に配置する。
         urls = [
             path('import_csv/', self.admin_site.admin_view(self.import_csv), name='student_import_csv'),
-        ] + urls
+        ]
+        urls += super().get_urls()
         return urls
 
     """学生モデルの管理画面設定"""
@@ -288,27 +301,30 @@ class StudentAdmin(CustomUserAdmin):
 
     """CSVインポートアクションの追加"""
     def import_csv(self, request):
-        form = CsvImportForm(request.POST, request.FILES)
+        form = UserCsvImportForm(request.POST, request.FILES)
 
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
+            raw_password = form.cleaned_data['password']
+            password = make_password(raw_password)
 
             decoded_file = csv_file.read().decode('utf-8')
             io_string = io.StringIO(decoded_file)
             reader = csv.reader(io_string)
             _header = next(reader)  # ヘッダー行をスキップ
 
-            # 既存のユーザーIDを事前に取得（1回のクエリ）
+            # 既存のユーザーIDを事前に取得
             existing_user_ids = set(
                 CustomUser.objects.values_list('user_id', flat=True)
             )
-            
-            # ClassRoomを事前にキャッシュ（1回のクエリ）
+
+            # ClassRoomを事前にキャッシュ
             classrooms = {}
             for cr in ClassRoom.objects.all():
                 classrooms[(cr.grade, cr.class_number)] = cr
 
             users_to_create = []
+            classroom_to_create = []
             student_classroom_mapping = []  # (user_id, classroom_key)のマッピング
             users_created = 0
             users_failed = 0
@@ -330,8 +346,12 @@ class StudentAdmin(CustomUserAdmin):
                 
                 classroom_key = (grade_int, classroom_int)
                 if classroom_key not in classrooms:
-                    users_failed += 1
-                    continue  # クラスルームが存在しない
+                    tmp_classroom = ClassRoom(
+                        grade=grade_int,
+                        class_number=classroom_int,
+                    )
+                    classrooms[classroom_key] = tmp_classroom
+                    classroom_to_create.append(tmp_classroom)
                 
                 # 既存ユーザーのチェック（キャッシュから）
                 if user_id not in existing_user_ids:
@@ -341,8 +361,8 @@ class StudentAdmin(CustomUserAdmin):
                         last_name='',
                         is_teacher=False,
                         is_superuser=False,
+                        password=password,
                     )
-                    user.set_password(user_id)
                     users_to_create.append(user)
                     student_classroom_mapping.append((user_id, classroom_key))
                     existing_user_ids.add(user_id)  # キャッシュを更新
@@ -352,13 +372,14 @@ class StudentAdmin(CustomUserAdmin):
             # バルクインサート（1回のクエリ）
             if users_to_create:
                 with transaction.atomic():
+                    _created = ClassRoom.objects.bulk_create(classroom_to_create)
                     created_users = Student.objects.bulk_create(users_to_create)
                     users_created = len(created_users)
-                    
+
                     # 作成した学生をクラスルームに追加
                     # 作成したユーザーをuser_idでマッピング
                     user_id_to_student = {user.user_id: user for user in created_users}
-                    
+
                     # 中間テーブルへの直接バルクインサート（1回のクエリ）
                     through_model = ClassRoom.students.through
                     relations_to_create = [
@@ -369,16 +390,17 @@ class StudentAdmin(CustomUserAdmin):
                         for user_id, classroom_key in student_classroom_mapping
                     ]
                     through_model.objects.bulk_create(relations_to_create)
+
             self.message_user(
                 request, 
                 f"インポート完了: {users_created} 件のユーザーが作成されました。{users_failed} 件の行がスキップされました。", 
                 level= messages.SUCCESS if users_failed == 0 else messages.WARNING
             )
-            return None  # リダイレクトしない
+
         context = {
             'form': form,
             'title': _('CSVファイルから学生をインポート'),
-            'csv_format' : _('user_id, first_name, last_name, password'),
+            'csv_format' : _('ユーザーID, 学年, クラス'),
             'opts': self.model._meta,
             'has_permission': self.has_change_permission(request),
         }

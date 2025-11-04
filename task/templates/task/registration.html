@@ -1,4 +1,8 @@
 {% extends "task/student_base.html" %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
 
 {% block title %}
 フォームページ
@@ -12,30 +16,12 @@
         <form action="" method="POST">
             {% csrf_token %}
 
-            {% for field in form %}
-            <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">
-                    {{ field.label }}
-                    {% if field.field.required %}
-                    <span class="text-danger">*</span>
-                    {% endif %}
-                </label>
-
-                {{ field }}
-
-                {% if field.help_text %}
-                <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-
-                {% for error in field.errors %}
-                <div class="alert alert-danger p-1 mt-1">{{ error }}</div>
-                {% endfor %}
-            </div>
-            {% endfor %}
+            {% bootstrap_form_errors form %}
+            {% bootstrap_form form %}
 
             <div class="d-grid mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
-                    押せ!!!
+                    登録
                 </button>
             </div>
         </form>

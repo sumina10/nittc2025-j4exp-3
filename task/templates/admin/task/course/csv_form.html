@@ -1,0 +1,48 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <h2>CSVによる科目情報インポート</h2>
+
+        <p>
+            科目情報を含むCSVファイルをアップロードしてください。
+        </p>
+        <p>
+            CSVのフォーマットは、<b>{{ csv_format }}</b>の順序を想定しています。
+        </p>
+        <ul>
+            <li>教師名が一致しない場合は、その行をスキップします。</li>
+            <li>教師名は姓名の順番を想定しています。スペースは開けずに記述してください。</li>
+            <li>クラスは学年-クラス番号を想定しています。学年、クラス番号は半角英数字にしてください。正しくない場合、その行をスキップします。</li>
+            <li>1行目はスキップされます。</li>
+        </ul>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <fieldset class="module aligned">
+                {% for field in form %}
+                <div class="form-row">
+                    <div class="fieldWrapper">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}
+                        <p class="help">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <p class="errornote">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </fieldset>
+
+            <div class="submit-row">
+                <input type="submit" value="インポートを実行" class="default" name="_import">
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
