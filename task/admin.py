@@ -92,7 +92,7 @@ class ClassRoomAdmin(admin.ModelAdmin):
             class_created = len(through_model.objects.bulk_create(relations_to_create))
             self.message_user(
                 request,
-                f"インポート完了: {class_created} 件のユーザーが作成されました。{class_failed} 件の行がスキップされました。",
+                f"インポート完了: {class_created} 件の関連付けが作成されました。{class_failed} 件の行がスキップされました。",
                 level=messages.SUCCESS if class_failed == 0 else messages.WARNING
             )
 
