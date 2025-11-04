@@ -1,9 +1,9 @@
 from django.contrib import admin, messages
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.core.exceptions import ValidationError, MultipleObjectsReturned, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django import forms
 from django.shortcuts import render
-from django.urls import path, reverse
+from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -126,11 +126,11 @@ class CustomUserAdmin(admin.ModelAdmin):
             form = AdminPasswordChangeForm(user)
 
         fieldsets = [(None, {'fields': list(form.base_fields)})]
-        adminForm = admin.helpers.AdminForm(form, fieldsets, {})
+        admin_form = admin.helpers.AdminForm(form, fieldsets, {})
 
         context = {
             'title': _('%s のパスワード変更') % user.user_id,
-            'adminForm': adminForm,
+            'adminForm': admin_form,
             'form_url': form_url,
             'form': form,
             'add': True,

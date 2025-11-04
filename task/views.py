@@ -1,13 +1,12 @@
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
-from accounts.models import Teacher, Student
+from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Course, ClassRoom
+from .models import Assignment
 from .forms import AssignmentCreateForm, AssignmentEditForm
 
 
