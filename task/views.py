@@ -27,11 +27,8 @@ class CreateAssignment(LoginRequiredMixin, StudentRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.student = self.request.user
-        # form.instance.due_date = timezone.now()
-    
         combined_data = form.cleaned_data.copy()
         combined_data['student'] = form.instance.student
-        # combined_data['due_date'] = form.instance.due_date
         return super().form_valid(form)
 
 class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
