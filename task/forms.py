@@ -20,7 +20,7 @@ class AssignmentCreateForm(forms.ModelForm):
         if due_date and due_date <= timezone.now():
             raise forms.ValidationError("期限は現在よりも後の日時を指定してください")
         return due_date
-    
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)        
