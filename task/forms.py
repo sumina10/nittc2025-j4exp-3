@@ -36,6 +36,13 @@ class AssignmentEditForm(forms.ModelForm):
             'due_date': DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         }
 
+    def clean_due_date(self):
+        due_date = self.cleaned_data['due_date']
+        original_due_date = self.instance.due_date
+        if original_due_date != due_date and due_date <= timezone.now():
+            raise forms.ValidationError("期限は現在よりも後の日時を指定してください")
+        return due_date
+
 class CsvImportForm(forms.Form):
     csv_file = forms.FileField(
         label=_("CSVファイルを選択"),
