@@ -206,7 +206,7 @@ class CourseAdmin(admin.ModelAdmin):
             course_created = len(created_courses)
             self.message_user(
                 request,
-                f"インポート完了: {course_created} 件のユーザーが作成されました。{course_failed} 件の行がスキップされました。",
+                f"インポート完了: {course_created} 件の科目が作成されました。{course_failed} 件の行がスキップされました。",
                 level=messages.SUCCESS if course_failed == 0 else messages.WARNING
             )
 
