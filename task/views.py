@@ -1,13 +1,12 @@
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
-from accounts.models import Teacher, Student
+from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Course, ClassRoom
+from .models import Assignment
 from .forms import AssignmentCreateForm, AssignmentEditForm
 
 
@@ -27,11 +26,8 @@ class CreateAssignment(LoginRequiredMixin, StudentRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.student = self.request.user
-        # form.instance.due_date = timezone.now()
-    
         combined_data = form.cleaned_data.copy()
         combined_data['student'] = form.instance.student
-        # combined_data['due_date'] = form.instance.due_date
         return super().form_valid(form)
 
 class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承

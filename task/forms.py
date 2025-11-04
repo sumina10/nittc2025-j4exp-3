@@ -2,6 +2,7 @@ from django.core.validators import FileExtensionValidator
 from django.forms.widgets import DateTimeInput
 from django.utils.translation import gettext_lazy as _
 from django import forms
+from django.utils import timezone
 
 
 from .models import Assignment, Course
@@ -13,7 +14,13 @@ class AssignmentCreateForm(forms.ModelForm):
         widgets = {
             'due_date': DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         }
-    
+
+    def clean_due_date(self):
+        due_date = self.cleaned_data['due_date']
+        if due_date and due_date <= timezone.now():
+            raise forms.ValidationError("期限は現在よりも後の日時を指定してください")
+        return due_date
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)        
@@ -28,6 +35,13 @@ class AssignmentEditForm(forms.ModelForm):
         widgets = {
             'due_date': DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         }
+
+    def clean_due_date(self):
+        due_date = self.cleaned_data['due_date']
+        original_due_date = self.instance.due_date
+        if original_due_date != due_date and due_date <= timezone.now():
+            raise forms.ValidationError("期限は現在よりも後の日時を指定してください")
+        return due_date
 
 class CsvImportForm(forms.Form):
     csv_file = forms.FileField(
