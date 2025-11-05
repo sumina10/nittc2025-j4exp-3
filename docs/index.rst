@@ -9,5 +9,6 @@ nittc documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-    accounts
-    task
+
+   source/accounts
+   source/task
