@@ -56,14 +56,16 @@ class TaskViewsTest(TestCase):
         # アクセス関連テストケース
 
         cls.TeacherA = Teacher.objects.create_user(user_id='teacherA', password='password', is_teacher=True)
+        cls.StudentA = Student.objects.create_user(user_id='studentA', password='password')
+        cls.StudentB = Student.objects.create_user(user_id='studentB', password='password')
 
         # HRAは所属
         cls.ClassRoomA = ClassRoom.objects.create(grade=3, class_number=1)
         cls.ClassRoomA.teachers.add(cls.TeacherA)
-        cls.ClassRoomA.students.add(cls.student1)
+        cls.ClassRoomA.students.add(cls.StudentA)
 
         cls.ClassRoomB = ClassRoom.objects.create(grade=4, class_number=1)
-        cls.ClassRoomB.students.add(cls.student2)
+        cls.ClassRoomB.students.add(cls.StudentB)
 
         # 科目A, Cは所属
         cls.CourseA = Course.objects.create(title='History', classroom=cls.ClassRoomA)
@@ -79,28 +81,28 @@ class TaskViewsTest(TestCase):
         cls.AssignmentA = Assignment.objects.create(
             title='History Essay',
             course=cls.CourseA,
-            student=cls.student1,
+            student=cls.StudentA,
             due_date=timezone.now()
         )
 
         cls.AssignmentB = Assignment.objects.create(
             title='Geography Essay',
             course=cls.CourseB,
-            student=cls.student1,
+            student=cls.StudentA,
             due_date=timezone.now()
         )
 
         cls.AssignmentC = Assignment.objects.create(
             title='Art Project',
             course=cls.CourseC,
-            student=cls.student2,
+            student=cls.StudentB,
             due_date=timezone.now()
         )
 
         cls.AssignmentD = Assignment.objects.create(
             title='Science Project',
             course=cls.CourseD,
-            student=cls.student2,
+            student=cls.StudentB,
             due_date=timezone.now()
         )
 
