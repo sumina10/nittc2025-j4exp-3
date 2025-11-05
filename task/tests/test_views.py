@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -51,6 +53,57 @@ class TaskViewsTest(TestCase):
             due_date=timezone.now()
         )
 
+        # アクセス関連テストケース
+
+        cls.TeacherA = Teacher.objects.create_user(user_id='teacherA', password='password', is_teacher=True)
+
+        # HRAは所属
+        cls.ClassRoomA = ClassRoom.objects.create(grade=3, class_number=1)
+        cls.ClassRoomA.teachers.add(cls.TeacherA)
+        cls.ClassRoomA.students.add(cls.student1)
+
+        cls.ClassRoomB = ClassRoom.objects.create(grade=4, class_number=1)
+        cls.ClassRoomB.students.add(cls.student2)
+
+        # 科目A, Cは所属
+        cls.CourseA = Course.objects.create(title='History', classroom=cls.ClassRoomA)
+        cls.CourseA.teachers.add(cls.TeacherA)
+
+        cls.CourseB = Course.objects.create(title='Geography', classroom=cls.ClassRoomA)
+
+        cls.CourseC = Course.objects.create(title='Art', classroom=cls.ClassRoomB)
+        cls.CourseC.teachers.add(cls.TeacherA)
+
+        cls.CourseD = Course.objects.create(title='Science', classroom=cls.ClassRoomB)
+
+        cls.AssignmentA = Assignment.objects.create(
+            title='History Essay',
+            course=cls.CourseA,
+            student=cls.student1,
+            due_date=timezone.now()
+        )
+
+        cls.AssignmentB = Assignment.objects.create(
+            title='Geography Essay',
+            course=cls.CourseB,
+            student=cls.student1,
+            due_date=timezone.now()
+        )
+
+        cls.AssignmentC = Assignment.objects.create(
+            title='Art Project',
+            course=cls.CourseC,
+            student=cls.student2,
+            due_date=timezone.now()
+        )
+
+        cls.AssignmentD = Assignment.objects.create(
+            title='Science Project',
+            course=cls.CourseD,
+            student=cls.student2,
+            due_date=timezone.now()
+        )
+
         # URL
         cls.create_url = reverse('task-create')
         cls.student_home_url = reverse('student-home')
@@ -83,14 +136,15 @@ class TaskViewsTest(TestCase):
         """学生が課題を正常に作成できることを確認"""
         self.client.login(user_id='student1', password='password')
         assignment_count = Assignment.objects.count()
+        due_date = timezone.now() + timedelta(days=1)
         form_data = {
             'title': 'New Assignment',
             'description': 'This is a new assignment.',
-            'due_date': timezone.now().strftime('%Y-%m-%dT%H:%M'),
+            'due_date': due_date.strftime('%Y-%m-%dT%H:%M'),
             'course': self.course1.id,
         }
         response = self.client.post(self.create_url, form_data)
-        
+
         # 成功URLにリダイレクトされるか
         self.assertRedirects(response, self.create_url)
         # 課題が1つ増えているか
@@ -142,15 +196,16 @@ class TaskViewsTest(TestCase):
 
     def test_teacher_home_view_queryset(self):
         """教員の課題一覧に担当学生の課題のみが表示されることを確認"""
-        self.client.login(user_id='teacher1', password='password')
+        self.client.login(user_id='teacherA', password='password')
         response = self.client.get(self.teacher_home_url)
         self.assertEqual(response.status_code, 200)
 
         # コンテキストの assignment_list を確認
         assignments_in_context = response.context['assignment_list']
-        self.assertIn(self.assignment1, assignments_in_context) # teacher1はstudent1の担当
-        self.assertNotIn(self.assignment2, assignments_in_context) # teacher1はstudent2の担当ではない
-        self.assertEqual(len(assignments_in_context), 1)
+        self.assertIn(self.AssignmentA, assignments_in_context)
+        self.assertIn(self.AssignmentB, assignments_in_context)
+        self.assertIn(self.AssignmentC, assignments_in_context)
+        self.assertNotIn(self.AssignmentD, assignments_in_context)
 
     def test_teacher_home_view_for_student_is_forbidden(self):
         """学生は教員の課題一覧ページにアクセスできないことを確認"""
