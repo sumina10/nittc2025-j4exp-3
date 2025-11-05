@@ -3,7 +3,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
+from django.db.models import Prefetch,Q
 from django.core.exceptions import PermissionDenied
 from accounts.models import Teacher, Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
@@ -54,7 +54,7 @@ class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, Update
             raise PermissionDenied
         return assignment
 
-class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView): #TeacherAssignmentViewがListViewとLoginRequiredMixinを継承
+class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     model = Assignment
     template_name = "task/teacher_home.html"
 
@@ -62,15 +62,20 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         if not self.request.user.is_teacher:
             raise PermissionDenied
         
-        # 担当しているコースまたはクラスルームの学生を取得
-        # コース経由で学生を取得する場合: course -> classroom -> students
-        students = Student.objects.filter(
-            Q(classrooms_students__courses__teachers=self.request.user) | 
-            Q(classrooms_students__teachers=self.request.user)
-        ).distinct()
+        # --- Assignment を直接絞り込む ---
+
+        # 条件A: 自分が「科目担当」であるコースの課題
+        q_subject_teacher = Q(course__teachers=self.request.user)
         
-        # 担当している学生の課題を返す
-        return super().get_queryset().filter(student__in=students)
+        # 条件B: 自分が「クラス担任」であるクラスに所属する生徒の課題
+        q_homeroom_teacher = Q(student__classrooms_students__teachers=self.request.user)
+        
+        # 条件A または 条件B に合致する課題（Assignment）を取得
+        queryset = Assignment.objects.filter(
+            q_subject_teacher | q_homeroom_teacher
+        ).select_related('student', 'course').distinct() # N+1対策
+        
+        return queryset
 
 class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     """
@@ -88,7 +93,7 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         """
         # 担当している学生を取得
         students = Student.objects.filter(
-            Q(classrooms_students__courses__teachers=self.request.user) |   # 科目担当パターン
+            Q(assignments__course__teachers=self.request.user) |   # 科目担当パターン
             Q(classrooms_students__teachers=self.request.user)              # クラス担当パターン
         ).distinct()                                                        # 重複排除
         
