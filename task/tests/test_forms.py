@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 from accounts.models import Teacher, Student
-from task.models import ClassRoom, Course, Assignment
+from task.models import ClassRoom, Course
 from task.forms import AssignmentCreateForm
 
 class AssignmentFormTest(TestCase):

@@ -4,7 +4,6 @@ from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
-from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
 from .models import Assignment, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm
