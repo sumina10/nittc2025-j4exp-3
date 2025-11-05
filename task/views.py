@@ -109,7 +109,7 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         # 3. LogEntry を絞り込む Q オブジェクトを定義
         
         # 条件1: 教師自身のログ
-        q_self = Q(actor=self.request.user)
+        # q_self = Q(actor=self.request.user)
         
         # 条件2: 担当 Assignment に対するログ（actor が誰であれ）
         q_my_assignment_logs = Q(
@@ -119,7 +119,7 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 4. 絞り込みを実行
         queryset = super().get_queryset().filter(
-            q_self | q_my_assignment_logs
+            q_my_assignment_logs
         ).distinct()
         
         # 日時の降順（新しい順）で並び替え
