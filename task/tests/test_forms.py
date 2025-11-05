@@ -1,8 +1,10 @@
+from datetime import timedelta
+
 from django.test import TestCase
 from django.utils import timezone
 from accounts.models import Teacher, Student
 from task.models import ClassRoom, Course, Assignment
-from task.forms import AssignmentForm
+from task.forms import AssignmentCreateForm
 
 class AssignmentFormTest(TestCase):
     @classmethod
@@ -23,14 +25,15 @@ class AssignmentFormTest(TestCase):
 
     def test_assignment_form_valid_data(self):
         """有効なデータでフォームがバリデーションを通過することを確認"""
+        due_date = timezone.now() + timedelta(days=7)
         form_data = {
             'title': 'Homework 1',
             'description': 'Complete exercises 1-5',
-            'due_date': timezone.now().strftime('%Y-%m-%dT%H:%M'),
+            'due_date': due_date.strftime('%Y-%m-%dT%H:%M'),
             'course': self.course1.id,
         }
         # フォームにログインユーザー情報を渡す
-        form = AssignmentForm(data=form_data, user=self.student)
+        form = AssignmentCreateForm(data=form_data, user=self.student)
         self.assertTrue(form.is_valid())
  
         # フォームが正しく保存できるかを確認
@@ -50,13 +53,13 @@ class AssignmentFormTest(TestCase):
             'due_date': timezone.now().strftime('%Y-%m-%dT%H:%M'),
             'course': self.course1.id,
         }
-        form = AssignmentForm(data=form_data, user=self.student)
+        form = AssignmentCreateForm(data=form_data, user=self.student)
         self.assertFalse(form.is_valid())
         self.assertIn('title', form.errors) # titleフィールドにエラーがあることを確認
 
     def test_form_course_queryset(self):
         """フォームのcourseフィールドが、学生が所属するコースのみを表示することを確認"""
-        form = AssignmentForm(user=self.student)
+        form = AssignmentCreateForm(user=self.student)
         # 学生が所属するコースは選択肢に含まれる
         self.assertIn(self.course1, form.fields['course'].queryset)
         # 学生が所属しないコースは選択肢に含まれない
