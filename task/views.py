@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment
+from .models import Assignment, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm
 
 
@@ -58,11 +58,15 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
             raise PermissionDenied
         
         # 担当しているコースまたはクラスルームの学生を取得
-        # コース経由で学生を取得する場合: course -> classroom -> students
-        students = Student.objects.filter(
-            Q(classrooms_students__courses__teachers=self.request.user) | 
-            Q(classrooms_students__teachers=self.request.user)
+        # 所属しているクラス 所属しているコース T
+        # 所属していないクラス 所属しているコース T
+        # 所属しているクラス 所属していないコース T
+        # 所属していないクラス 所属していないコース F
+
+        courses = Course.objects.filter(
+            Q(teachers=self.request.user) |
+            Q(classroom__teachers=self.request.user)
         ).distinct()
         
         # 担当している学生の課題を返す
-        return super().get_queryset().filter(student__in=students)
+        return super().get_queryset().filter(course__in=courses)
