@@ -51,3 +51,16 @@ language = 'ja'
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+
+latex_elements = {
+    "papersize": "letterpaper",
+    "pointsize": "10pt",
+    "figure_align": "htbp",
+    "preamble": r"""
+        \usepackage{listings}
+        \lstset{ 
+            language=Python,                 % the language of the code
+            title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+        }
+    """,
+}
