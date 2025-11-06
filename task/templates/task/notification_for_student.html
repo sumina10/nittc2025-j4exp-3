@@ -1,0 +1,64 @@
+{% extends "task/student_base.html" %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>通知</h2>
+
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th style="width: 15%;">日時</th>
+                <th style="width: 15%;">操作者</th>
+                <th style="width: 20%;">対象課題</th>
+                <th style="width: 10%;">操作内容</th>
+                <th style="width: 40%;">変更詳細</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for notification in notifications %}
+            <tr>
+                <td>{{ notification.timestamp|date:"Y/m/d H:i" }}</td>
+                <td>{{ notification.actor }}</td>
+                <td>{{ notification.object_repr }}</td>
+                <td>{{ notification.get_action_display }}</td>
+                <td>
+                    {% if notification.action == 0 %}
+                    <ul class="list-unstyled mb-0">
+                        {% for field, values in notification.changes_display_dict.items %}
+                        {% if values.1 %}
+                        <li>
+                            <strong>{{ field }}</strong>:
+                            {{ values.1 }}
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+
+                    {% elif notification.action == 1 %}
+                    <ul class="list-unstyled mb-0">
+                        {% for field, values in notification.changes_display_dict.items %}
+                        <li>
+                            <strong>{{ field }}</strong>:
+                            {{ values.0 }} → {{ values.1 }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    {% elif notification.action == 2 %}
+                    <p class="mb-0">(削除されました)</p>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">通知はありません。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
