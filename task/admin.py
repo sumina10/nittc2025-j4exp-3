@@ -7,9 +7,10 @@ from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render
 
+from accounts.admin import TeacherAdmin
 from accounts.models import Teacher
 from .forms import CsvImportForm
-from .models import ClassRoom, Course, Assignment
+from .models import ClassRoom, Course, Assignment, Reminder
 
 class ClassRoomAdmin(admin.ModelAdmin):
     """クラスルーム管理画面の設定"""
@@ -242,6 +243,15 @@ class AssignmentAdmin(admin.ModelAdmin):
         }),
     )
 
+class ReminderAdmin(admin.ModelAdmin):
+    """リマインダー管理画面の設定"""
+    list_display = ('title', 'teacher', 'course')
+    search_fields = ('title', 'description',
+                    'teacher__last_name', 'teacher__first_name',
+                    'course__title')
+
+
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Assignment, AssignmentAdmin)
 admin.site.register(ClassRoom, ClassRoomAdmin)
+admin.site.register(Reminder, ReminderAdmin)

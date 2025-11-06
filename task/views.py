@@ -1,14 +1,15 @@
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch,Q
 from django.core.exceptions import PermissionDenied
 from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Course
-from .forms import AssignmentCreateForm, AssignmentEditForm
+from accounts.models import Student
+from .models import Assignment, Reminder
+from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
 
@@ -51,6 +52,19 @@ class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, Update
             raise PermissionDenied
         return assignment
 
+class StudentNotifyView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
+    template_name = "task/notify.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        reminders = Reminder.objects.filter(
+            course__classroom__students=self.request.user.pk
+        ).order_by('-id')
+
+        context['reminders'] = reminders
+        return context
+
 class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     model = Assignment
     template_name = "task/teacher_home.html"
@@ -73,6 +87,21 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         ).select_related('student', 'course').distinct() 
         
         return queryset
+
+class TeacherReminderCreateView(LoginRequiredMixin, TeacherRequiredMixin, CreateView):
+    model = Reminder
+    form_class = ReminderCreateForm
+    template_name = "task/reminder_create.html"
+    success_url = reverse_lazy('teacher-home')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.teacher = self.request.user
+        return super().form_valid(form)
 
 class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     
@@ -126,16 +155,16 @@ class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, ListView
     model = LogEntry
     template_name = "task/notification_for_student.html"
     context_object_name = 'notifications'
-    
+
     def get_queryset(self):
         # Assignment の ContentType
         assignment_ct = ContentType.objects.get_for_model(Assignment)
 
         # 「同クラスの生徒の課題」を対象にする
         student = get_object_or_404(Student, pk=self.request.user.pk)
-        
+
         q_classmates = Q(student__classrooms_students__in=student.classrooms_students.all())
-       
+
         # 対象 Assignment の ID リスト（重複除外）
         related_assignment_ids = Assignment.objects.filter(
             q_classmates
