@@ -2,12 +2,8 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-<<<<<<< HEAD
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch,Q
-=======
-from django.db.models import Q
->>>>>>> main
 from django.core.exceptions import PermissionDenied
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
 from .models import Assignment, Course
@@ -62,7 +58,6 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         if not self.request.user.is_teacher:
             raise PermissionDenied
         
-<<<<<<< HEAD
         # --- Assignment を直接絞り込む ---
 
         # 条件A: 自分が「科目担当」であるコースの課題
@@ -125,18 +120,3 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
-=======
-        # 担当しているコースまたはクラスルームの学生を取得
-        # 所属しているクラス 所属しているコース T
-        # 所属していないクラス 所属しているコース T
-        # 所属しているクラス 所属していないコース T
-        # 所属していないクラス 所属していないコース F
-
-        courses = Course.objects.filter(
-            Q(teachers=self.request.user) |
-            Q(classroom__teachers=self.request.user)
-        ).distinct()
-        
-        # 担当している学生の課題を返す
-        return super().get_queryset().filter(course__in=courses)
->>>>>>> main
