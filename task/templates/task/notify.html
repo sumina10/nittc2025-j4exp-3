@@ -22,7 +22,7 @@
 
     {% for reminder in reminders %}
     <div class="card mb-3">
-        <div class="card-header" style="background-color: #00587A; color: white;">
+        <div class="card-header">
             <h5 class="mb-0">
                 {{ reminder.title }}
                 <span class="badge bg-warning text-dark ms-2">{{ reminder.course }}</span>
@@ -31,7 +31,7 @@
         <div class="card-body">
             <p class="card-text">{{ reminder.description | linebreaks }}</p>
             <small class="text-muted">
-                講師: <strong>{{ reminder.teacher.user_id }}</strong>
+                <strong>{{ reminder.teacher.user_id }}</strong>
             </small>
         </div>
         <div class="card-footer" style="background-color: #f8f9fa;">
