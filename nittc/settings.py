@@ -57,11 +57,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-<<<<<<< HEAD
     "auditlog.middleware.AuditlogMiddleware",
-=======
     'debug_toolbar.middleware.DebugToolbarMiddleware',
->>>>>>> main
 ]
 
 TESTING = "test" in sys.argv or "PYTEST_VERSION" in os.environ
