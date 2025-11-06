@@ -1,0 +1,30 @@
+{% extends "task/teacher_base.html" %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block title %}
+リマインダー作成
+{% endblock title %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow-sm p-4 mx-auto" style="max-width: 600px;">
+        <h2 class="card-title text-center mb-4">リマインダー作成</h2>
+
+        <form action="" method="POST">
+            {% csrf_token %}
+
+            {% bootstrap_form_errors form %}
+            {% bootstrap_form form %}
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    登録
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

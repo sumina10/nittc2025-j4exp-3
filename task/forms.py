@@ -5,7 +5,8 @@ from django import forms
 from django.utils import timezone
 
 
-from .models import Assignment, Course
+from .models import Assignment, Course, Reminder
+
 
 class AssignmentCreateForm(forms.ModelForm):
     class Meta:
@@ -55,3 +56,15 @@ class CsvImportForm(forms.Form):
             )
         ]
     )
+
+class ReminderCreateForm(forms.ModelForm):
+    class Meta:
+        model = Reminder
+        fields = ['title', 'description', 'course']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        self.fields['course'].queryset = Course.objects.filter(
+            teachers=user
+        ).distinct()

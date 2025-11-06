@@ -6,8 +6,8 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch,Q
 from django.core.exceptions import PermissionDenied
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Course
-from .forms import AssignmentCreateForm, AssignmentEditForm
+from .models import Assignment, Reminder
+from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
 
@@ -72,6 +72,23 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         ).select_related('student', 'course').distinct() 
         
         return queryset
+
+class TeacherReminderCreateView(LoginRequiredMixin, TeacherRequiredMixin, CreateView):
+    model = Reminder
+    form_class = ReminderCreateForm
+    template_name = "task/reminder_create.html"
+    success_url = reverse_lazy('teacher-home')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.teacher = self.request.user
+        return super().form_valid(form)
+
+
 
 class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     
