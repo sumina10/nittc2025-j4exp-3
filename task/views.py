@@ -120,3 +120,7 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
+
+# class Stu_NotificationView(LoginRequiredMixin, StudentRequiredMixin, ListView):
+#     model = LogEntry
+#     template_name = "task/stu_Notification.html"
