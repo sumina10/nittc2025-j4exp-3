@@ -75,8 +75,10 @@
         <h1>学生用HOME</h1>
         <div>
             {% block header_button %}
-            <button class="btn btn-light me-2">新規作成</button>
-            <button class="btn btn-light">通知</button>
+            <a href="{% url 'task-create' %}" class="btn btn-light me-2">新規作成</a>
+            <a href="{% url 'student-notify' %}" class="btn btn-light">
+                <i class="bi bi-bell"></i> 通知
+            </a>
             {% endblock %}
         </div>
     </div>

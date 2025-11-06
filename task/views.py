@@ -1,11 +1,12 @@
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch,Q
 from django.core.exceptions import PermissionDenied
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
+from accounts.models import Student
 from .models import Assignment, Reminder
 from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
@@ -50,6 +51,19 @@ class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, Update
             raise PermissionDenied
         return assignment
 
+class StudentNotifyView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
+    template_name = "task/notify.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        reminders = Reminder.objects.filter(
+            course__classroom__students=self.request.user.pk
+        ).order_by('-id')
+
+        context['reminders'] = reminders
+        return context
+
 class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     model = Assignment
     template_name = "task/teacher_home.html"
@@ -87,8 +101,6 @@ class TeacherReminderCreateView(LoginRequiredMixin, TeacherRequiredMixin, Create
     def form_valid(self, form):
         form.instance.teacher = self.request.user
         return super().form_valid(form)
-
-
 
 class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     
