@@ -39,3 +39,9 @@ class Assignment(models.Model):
     def __str__(self):
         return self.title
 
+class Reminder(models.Model):
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='reminders')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='reminders')
+    title = models.CharField(max_length=32)
+    description = models.TextField(blank=True)
+
