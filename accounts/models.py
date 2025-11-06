@@ -48,8 +48,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
     
     # 個人情報フィールド
-    first_name = models.CharField(_('名'), max_length=30, blank=True)
-    last_name = models.CharField(_('姓'), max_length=150, blank=True)
+    first_name = models.CharField(_('姓'), max_length=30, blank=True)
+    last_name = models.CharField(_('名'), max_length=150, blank=True)
     
     # ユーザー種別
     is_teacher = models.BooleanField(
@@ -87,8 +87,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         """
         ユーザーのフルネームを返す
         """
-        full_name = f"{self.first_name} {self.last_name}"
-        return full_name.strip()
+        return f"{self.first_name}{self.last_name}"
 
     def get_short_name(self):
         """

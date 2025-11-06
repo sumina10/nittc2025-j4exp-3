@@ -1,13 +1,16 @@
 from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
+<<<<<<< HEAD
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch,Q
+=======
+from django.db.models import Q
+>>>>>>> main
 from django.core.exceptions import PermissionDenied
-from accounts.models import Teacher, Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Course, ClassRoom
+from .models import Assignment, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
@@ -28,11 +31,8 @@ class CreateAssignment(LoginRequiredMixin, StudentRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.student = self.request.user
-        # form.instance.due_date = timezone.now()
-    
         combined_data = form.cleaned_data.copy()
         combined_data['student'] = form.instance.student
-        # combined_data['due_date'] = form.instance.due_date
         return super().form_valid(form)
 
 class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView): #StudentAssignmentViewがListViewとLoginRequiredMixinを継承
@@ -62,6 +62,7 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         if not self.request.user.is_teacher:
             raise PermissionDenied
         
+<<<<<<< HEAD
         # --- Assignment を直接絞り込む ---
 
         # 条件A: 自分が「科目担当」であるコースの課題
@@ -124,3 +125,18 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
+=======
+        # 担当しているコースまたはクラスルームの学生を取得
+        # 所属しているクラス 所属しているコース T
+        # 所属していないクラス 所属しているコース T
+        # 所属しているクラス 所属していないコース T
+        # 所属していないクラス 所属していないコース F
+
+        courses = Course.objects.filter(
+            Q(teachers=self.request.user) |
+            Q(classroom__teachers=self.request.user)
+        ).distinct()
+        
+        # 担当している学生の課題を返す
+        return super().get_queryset().filter(course__in=courses)
+>>>>>>> main

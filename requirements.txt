@@ -1,2 +1,3 @@
+django-debug-toolbar
 Django==5.2.7
 django-bootstrap5==23.1.0
