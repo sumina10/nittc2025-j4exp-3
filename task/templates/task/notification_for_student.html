@@ -4,55 +4,46 @@
 {% bootstrap_css %}
 {% bootstrap_javascript %}
 
+{% block title %}
+通知一覧
+{% endblock title %}
+
 {% block content %}
 <div class="container my-4">
     <h2>通知</h2>
+
+    {% for reminder in reminders %}
+
+    {% endfor %}
 
     <table class="table table-bordered align-middle">
         <thead>
             <tr>
                 <th style="width: 15%;">日時</th>
-                <th style="width: 15%;">操作者</th>
-                <th style="width: 20%;">対象課題</th>
-                <th style="width: 10%;">操作内容</th>
-                <th style="width: 40%;">変更詳細</th>
+                <th style="width: 15%;">送信者</th>
+                <th style="width: 15%;">タイトル</th>
+                <th style="width: 40%;">メッセージ</th>
             </tr>
         </thead>
         <tbody>
             {% for notification in notifications %}
-            <tr>
-                <td>{{ notification.timestamp|date:"Y/m/d H:i" }}</td>
-                <td>{{ notification.actor }}</td>
-                <td>{{ notification.object_repr }}</td>
-                <td>{{ notification.get_action_display }}</td>
-                <td>
-                    {% if notification.action == 0 %}
-                    <ul class="list-unstyled mb-0">
-                        {% for field, values in notification.changes_display_dict.items %}
-                        {% if values.1 %}
-                        <li>
-                            <strong>{{ field }}</strong>:
-                            {{ values.1 }}
-                        </li>
-                        {% endif %}
-                        {% endfor %}
-                    </ul>
-
-                    {% elif notification.action == 1 %}
-                    <ul class="list-unstyled mb-0">
-                        {% for field, values in notification.changes_display_dict.items %}
-                        <li>
-                            <strong>{{ field }}</strong>:
-                            {{ values.0 }} → {{ values.1 }}
-                        </li>
-                        {% endfor %}
-                    </ul>
-
-                    {% elif notification.action == 2 %}
-                    <p class="mb-0">(削除されました)</p>
-                    {% endif %}
-                </td>
-            </tr>
+                {% if notification.timestamp %}
+                    <tr>
+                        <td>{{ notification.timestamp|date:"Y/m/d H:i" }}</td>
+                        <td>システム</td>
+                        <td>課題を作成しませんか?</td>
+                        <td>
+                            クラスメートが課題を作成しました、作成しませんか?
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td>{{ notification.created_at|date:"Y/m/d H:i" }}</td>
+                        <td>{{ notification.teacher }}</td>
+                        <td>{{ notification.title }}</td>
+                        <td>{{ notification.description|safe }}</td>
+                    </tr>
+                {% endif %}
             {% empty %}
             <tr>
                 <td colspan="5" class="text-center">通知はありません。</td>

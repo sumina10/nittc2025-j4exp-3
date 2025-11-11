@@ -1,3 +1,5 @@
+import itertools
+
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView, TemplateView
@@ -151,12 +153,13 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
 
-class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, ListView):
-    model = LogEntry
-    template_name = "task/notification_for_student.html"
-    context_object_name = 'notifications'
 
-    def get_queryset(self):
+class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
+    template_name = "task/notification_for_student.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
         # Assignment の ContentType
         assignment_ct = ContentType.objects.get_for_model(Assignment)
 
@@ -168,17 +171,24 @@ class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, ListView
         # 対象 Assignment の ID リスト（重複除外）
         related_assignment_ids = Assignment.objects.filter(
             q_classmates
-        ).values_list('pk', flat=True).distinct()
-
-        # 空なら早期 return（無駄なログ検索を防ぐ）
-        if not related_assignment_ids:
-            return LogEntry.objects.none()
+        ).exclude(student=self.request.user).values_list('pk', flat=True).distinct()
 
         # auditlog の object_pk は文字列で保存される場合があるので明示的に文字列化
         related_ids_str = [str(pk) for pk in related_assignment_ids]
 
         # Assignment に関連する LogEntry のみ取得（最新順）
-        return LogEntry.objects.filter(
+        log_entry = LogEntry.objects.filter(
             content_type=assignment_ct,
-            object_pk__in=related_ids_str
-        ).select_related('actor').order_by('-timestamp')
+            object_pk__in=related_ids_str,
+            action=0,
+        ).select_related('actor').order_by('-timestamp')[:10]
+
+        reminders = Reminder.objects.filter(
+            course__classroom__students=self.request.user.pk
+        ).order_by('-created_at')[:10]
+
+        chained_model = itertools.chain(log_entry, reminders)
+
+        context['notifications'] = chained_model
+
+        return context
