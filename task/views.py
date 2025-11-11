@@ -1,13 +1,16 @@
+import itertools
+
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch,Q
 from django.core.exceptions import PermissionDenied
+from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Course
-from .forms import AssignmentCreateForm, AssignmentEditForm
+from .models import Assignment, Reminder
+from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
 
@@ -73,6 +76,21 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         return queryset
 
+class TeacherReminderCreateView(LoginRequiredMixin, TeacherRequiredMixin, CreateView):
+    model = Reminder
+    form_class = ReminderCreateForm
+    template_name = "task/reminder_create.html"
+    success_url = reverse_lazy('teacher-home')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.teacher = self.request.user
+        return super().form_valid(form)
+
 class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     
     model = LogEntry
@@ -120,3 +138,43 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
+
+
+class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
+    template_name = "task/notification_for_student.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Assignment の ContentType
+        assignment_ct = ContentType.objects.get_for_model(Assignment)
+
+        # 「同クラスの生徒の課題」を対象にする
+        student = get_object_or_404(Student, pk=self.request.user.pk)
+
+        q_classmates = Q(student__classrooms_students__in=student.classrooms_students.all())
+
+        # 対象 Assignment の ID リスト（重複除外）
+        related_assignment_ids = Assignment.objects.filter(
+            q_classmates
+        ).exclude(student=self.request.user).values_list('pk', flat=True).distinct()
+
+        # auditlog の object_pk は文字列で保存される場合があるので明示的に文字列化
+        related_ids_str = [str(pk) for pk in related_assignment_ids]
+
+        # Assignment に関連する LogEntry のみ取得（最新順）
+        log_entry = LogEntry.objects.filter(
+            content_type=assignment_ct,
+            object_pk__in=related_ids_str,
+            action=0,
+        ).select_related('actor').order_by('-timestamp')[:10]
+
+        reminders = Reminder.objects.filter(
+            course__classroom__students=self.request.user.pk
+        ).order_by('-created_at')[:10]
+
+        chained_model = itertools.chain(log_entry, reminders)
+
+        context['notifications'] = chained_model
+
+        return context

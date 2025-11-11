@@ -22,7 +22,6 @@ class ProfileView(LoginRequiredMixin, DetailView):
             context['classrooms'] = tec.classrooms_teachers.all()
         else:
             stu = Student.objects.get(pk=self.request.user.pk)
-            print(stu.classrooms_students.all())
             context['classrooms'] = stu.classrooms_students.all()
 
         return context

@@ -1,0 +1,55 @@
+{% extends "task/student_base.html" %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block title %}
+通知一覧
+{% endblock title %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>通知</h2>
+
+    {% for reminder in reminders %}
+
+    {% endfor %}
+
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th style="width: 15%;">日時</th>
+                <th style="width: 15%;">送信者</th>
+                <th style="width: 15%;">タイトル</th>
+                <th style="width: 40%;">メッセージ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for notification in notifications %}
+                {% if notification.timestamp %}
+                    <tr>
+                        <td>{{ notification.timestamp|date:"Y/m/d H:i" }}</td>
+                        <td>システム</td>
+                        <td>課題を作成しませんか?</td>
+                        <td>
+                            クラスメートが課題を作成しました、作成しませんか?
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td>{{ notification.created_at|date:"Y/m/d H:i" }}</td>
+                        <td>{{ notification.teacher }}</td>
+                        <td>{{ notification.title }}</td>
+                        <td>{{ notification.description|safe }}</td>
+                    </tr>
+                {% endif %}
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">通知はありません。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
