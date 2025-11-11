@@ -9,7 +9,6 @@ from django.db.models import Prefetch,Q
 from django.core.exceptions import PermissionDenied
 from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from accounts.models import Student
 from .models import Assignment, Reminder
 from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
@@ -53,19 +52,6 @@ class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, Update
         if assignment.student != self.request.user:
             raise PermissionDenied
         return assignment
-
-class StudentNotifyView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
-    template_name = "task/notify.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        reminders = Reminder.objects.filter(
-            course__classroom__students=self.request.user.pk
-        ).order_by('-id')
-
-        context['reminders'] = reminders
-        return context
 
 class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     model = Assignment
