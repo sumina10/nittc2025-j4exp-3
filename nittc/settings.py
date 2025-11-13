@@ -9,9 +9,8 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
-
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -33,10 +32,15 @@ DEBUG = (env.get('DEBUG', 'False') == 'True')
 
 ALLOWED_HOSTS = env.get('ALLOWED_HOSTS', default='').split(',')
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
 
 # Application definition
 
 INSTALLED_APPS = [
+    "auditlog",
     'task',
     'accounts',
     'django_bootstrap5',
@@ -46,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar'
 ]
 
 MIDDLEWARE = [
@@ -56,8 +61,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "auditlog.middleware.AuditlogMiddleware",
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
+TESTING = "test" in sys.argv or "PYTEST_VERSION" in os.environ
 ROOT_URLCONF = 'nittc.urls'
 
 TEMPLATES = [
@@ -138,3 +146,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # カスタムユーザーモデルの設定
 AUTH_USER_MODEL = 'accounts.CustomUser'
 LOGIN_URL = '/accounts/login/'
+
+AUDITLOG_INCLUDE_ALL_MODELS = True
