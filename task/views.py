@@ -142,9 +142,10 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         secret_code = self.request.GET.get('secret', '')
-        if secret_code == 'AdminUra':
+        if secret_code == 'NeverLonely':
             context['easter_egg'] = True
-            context['easter_message'] = 'Wait, Are You lokking for me?'
+            context['easter_message'] = 'Lonely♭ Lonely♭  '
+            context['easter_gif_url'] = 'https://media1.tenor.com/m/27FNqSWFk-EAAAAd/evernight-%E5%B4%A9%E9%90%B5.gif'
         return context
 
 class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
