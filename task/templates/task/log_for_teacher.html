@@ -6,6 +6,13 @@
 
 {% block content %}
 <div class="container my-4">
+    {% if easter_egg %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h5>{{ easter_message }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
     <h2>アクティビティログ</h2>
 
     <table class="table table-bordered align-middle">

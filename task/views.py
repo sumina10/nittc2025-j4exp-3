@@ -139,6 +139,13 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        secret_code = self.request.GET.get('secret', '')
+        if secret_code == 'AdminUra':
+            context['easter_egg'] = True
+            context['easter_message'] = 'Wait, Are You lokking for me?'
+        return context
 
 class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
     template_name = "task/notification_for_student.html"
