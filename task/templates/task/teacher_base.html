@@ -18,7 +18,7 @@
 
         :root {
             --bs-primary: #00587A;
-            --bs-primary-rgb: 0, 88, 172;
+            --bs-primary-rgb: 0, 88, 122;
         }
 
         .status-icon {
@@ -69,14 +69,14 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                    <li class="nav-item m-lg-1">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-end">
+                    <li class="nav-item m-lg-1 m-2">
                         <a class="btn btn-outline-light" href="{% url 'teacher-reminder' %}">通知作成</a>
                     </li>
-                    <li class="nav-item m-lg-1">
+                    <li class="nav-item m-lg-1 m-2">
                         <a class="btn btn-outline-light" href="{% url 'teacher-log' %}">ログ</a>
                     </li>
-                    <li class="nav-item m-lg-1">
+                    <li class="nav-item m-lg-1 m-2">
                         <a class="btn btn-outline-light" href="{% url 'profile' %}">プロフィール</a>
                     </li>
                     {% block header_button %}
