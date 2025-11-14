@@ -22,7 +22,8 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
-    path('task/', include('task.urls'))
+    path('task/', include('task.urls')),
+    path('', lambda request: redirect('profile', permanent=True)),
 ]
 
 if not settings.TESTING:
