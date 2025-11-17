@@ -13,8 +13,9 @@ function onYouTubeIframeAPIReady() {
         videoId: '1SCrd3Ho0Hw', // 動画ID
         height: '256',
         width: '256',
-        loop: 1,
-        playerVars: {},
+        playerVars: {
+            loop: 1,
+        },
         events: {
             onStateChange: onPlayerStateChange, // 再生状態の変化を検知
             onReady: onReady,
