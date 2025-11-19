@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container my-4">
+    <h1>403 Forbidden</h1>
+    <p>ログイン情報が正しいかお確かめください。</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">ログイン</a>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container my-4">
+    <h1>500 Internal Server Error</h1>
+    <p>時間を置いてから再度お試しください。繰り返しメッセージが表示される場合は管理者にお知らせください。</p>
+</div>
+{% endblock %}

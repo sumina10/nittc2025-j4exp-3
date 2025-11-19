@@ -15,18 +15,9 @@
             background-color: #ffffff;
         }
 
-        .header {
-            background-color: #00587A;
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            margin: 0;
+        :root {
+            --bs-primary: #00587A;
+            --bs-primary-rgb: 0, 88, 122;
         }
 
         .status-icon {
@@ -53,11 +44,6 @@
             background-color: blue;
         }
 
-        .table th {
-            background-color: #00587A;
-            color: white;
-        }
-
         .table td,
         .table th {
             vertical-align: middle;
@@ -71,19 +57,33 @@
 
 <body>
     <!-- ヘッダー -->
-    <div class="header">
-        <h1>学生用HOME</h1>
-        <div>
-            {% block header_button %}
-            {% comment %}
-            example
-            <a href="{% url 'urls.pyから名前を引っ張る' %}" class="btn btn-light me-2">ボタンの名前</a>
-            {% endcomment %}
-            <a href="{% url 'task-create' %}" class="btn btn-light me-2">新規作成</a>
-            <a href="{% url 'student-notify' %}" class="btn btn-light">通知</a>
-            {% endblock %}
+    <nav class="navbar navbar-expand-lg navbar-light bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="{% url 'student-home' %}">
+                学生用HOME
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-end">
+                    <li class="nav-item m-lg-1 m-2">
+                        <a class="btn btn-outline-light" href="{% url 'task-create' %}">課題作成</a>
+                    </li>
+                    <li class="nav-item m-lg-1 m-2">
+                        <a class="btn btn-outline-light" href="{% url 'student-notify' %}">通知</a>
+                    </li>
+                    <li class="nav-item m-lg-1 m-2">
+                        <a class="btn btn-outline-light" href="{% url 'profile' %}">プロフィール</a>
+                    </li>
+                    {% block header_button %}
+                    {% endblock %}
+                </ul>
+            </div>
         </div>
-    </div>
+    </nav>
 
     {% block content %}
     {% endblock %}
