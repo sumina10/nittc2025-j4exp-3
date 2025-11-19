@@ -10,6 +10,7 @@ output_dir = docs_dir / "_build"
 
 import_ext = [
     '*.py',
+    '*.html'
 ]
 
 exclude_dirs = [
@@ -61,12 +62,11 @@ def get_directory_structure(root_dir: pathlib.Path) -> Dict[str, List]:
             if item.is_dir():
                 child_structure = get_directory_structure(item)
                 files = len(child_structure['files'])
-                if 0 < files:
-                    structure['directories'].append({
-                        'name': item.name,
-                        'path': item,
-                        'children': child_structure
-                    })
+                structure['directories'].append({
+                    'name': item.name,
+                    'path': item,
+                    'children': child_structure
+                })
             elif item.is_file():
                 # 対象ファイル拡張子をチェック
                 if any(item.match(ext) for ext in import_ext):
@@ -155,10 +155,10 @@ def save_document(content: str, output_path: pathlib.Path):
 if __name__ == "__main__":
     # ディレクトリ構造を取得
     print(f"Scanning directory: {base_dir}")
-    structure = get_directory_structure(base_dir)
+    structure_dir = get_directory_structure(base_dir)
     
     # Typstドキュメントを生成
-    typst_doc = generate_typst_document(structure)
+    typst_doc = generate_typst_document(structure_dir)
     typst_output = pathlib.Path(docs_dir / "_build/project_structure.typ")
     save_document(typst_doc, typst_output)
     
