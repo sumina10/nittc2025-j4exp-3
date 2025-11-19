@@ -60,6 +60,8 @@ class TaskViewsTest(TestCase):
     # CreateAssignment ビューのテスト
     # -----------------------------------------------------------------
 
+    # ブラックボックステスト: 学生ユーザーが正常にページを表示できるか（ステータスコード200）をテストする。
+    # ホワイトボックステスト: 意図したテンプレートが使用されているかをテストする。
     def test_create_assignment_view_for_student(self):
         """学生が課題作成ページにアクセスできることを確認"""
         self.client.login(user_id='student1', password='password')
@@ -67,18 +69,23 @@ class TaskViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'task/registration.html')
 
+    # ブラックボックステスト/ペネトレーションテスト: 権限のない教員ユーザーがアクセスしようとした場合に、適切にアクセスが拒否されるか（ステータスコード403）をテストする。
     def test_create_assignment_view_for_teacher_is_forbidden(self):
         """教員は課題作成ページにアクセスできないことを確認"""
         self.client.login(user_id='teacher1', password='password')
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 403) # PermissionDenied
 
+    # ブラックボックステスト/ペネトレーションテスト: 認証されていないユーザーがアクセスした場合に、ログインページへリダイレクトされるか（ステータスコード302）をテストする。
     def test_create_assignment_view_redirects_if_not_logged_in(self):
         """未ログインユーザーはログインページにリダイレクトされることを確認"""
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"/accounts/login/?next={self.create_url}")
 
+    # ブラックボックステスト: 有効なデータをPOSTした際に、期待されるページにリダイレクトされるかをテストする。
+    # ホワイトボックステスト: フォームの送信によって、データベースに新しい課題レコードが正しく作成・保存されるかをテストする。
+    # システムテスト: 課題作成の一連のフロー（ビュー、フォーム、モデルの連携）が全体として正しく機能するかを検証する。
     def test_create_assignment_post(self):
         """学生が課題を正常に作成できることを確認"""
         self.client.login(user_id='student1', password='password')
@@ -104,6 +111,8 @@ class TaskViewsTest(TestCase):
     # StudentAssignmentView ビューのテスト
     # -----------------------------------------------------------------
 
+    # ブラックボックステスト: 学生ユーザーが自身のホームページに正常にアクセスできるか（ステータスコード200）をテストする。
+    # ホワイトボックステスト: 意図したテンプレートが使用されているかをテストする。
     def test_student_home_view_for_student(self):
         """学生が自身の課題一覧ページにアクセスできることを確認"""
         self.client.login(user_id='student1', password='password')
@@ -111,6 +120,7 @@ class TaskViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'task/student_home.html')
 
+    # ホワイトボックステスト: ビューが表示するコンテキストデータ（assignment_list）に、ログインしている学生自身の課題のみが含まれ、他人の課題が含まれていないことをテストする。
     def test_student_home_view_queryset(self):
         """学生の課題一覧に自身の課題のみが表示されることを確認"""
         self.client.login(user_id='student1', password='password')
@@ -123,6 +133,7 @@ class TaskViewsTest(TestCase):
         self.assertNotIn(self.assignment2, assignments_in_context)
         self.assertEqual(len(assignments_in_context), 1)
 
+    # ブラックボックステスト/ペネトレーションテスト: 権限のない教員ユーザーが学生のホームページにアクセスしようとした場合に、アクセスが拒否されるか（ステータスコード403）をテストする。
     def test_student_home_view_for_teacher_is_forbidden(self):
         """教員は学生の課題一覧ページにアクセスできないことを確認"""
         self.client.login(user_id='teacher1', password='password')
@@ -133,6 +144,8 @@ class TaskViewsTest(TestCase):
     # TeacherAssignmentView ビューのテスト
     # -----------------------------------------------------------------
 
+    # ブラックボックステスト: 教員ユーザーが自身のホームページに正常にアクセスできるか（ステータスコード200）をテストする。
+    # ホワイトボックステスト: 意図したテンプレートが使用されているかをテストする。
     def test_teacher_home_view_for_teacher(self):
         """教員が担当学生の課題一覧ページにアクセスできることを確認"""
         self.client.login(user_id='teacher1', password='password')
@@ -140,6 +153,7 @@ class TaskViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'task/teacher_home.html')
 
+    # ホワイトボックステスト: ビューが表示するコンテキストデータ（assignment_list）に、ログインしている教員が担当する学生の課題のみが含まれていることをテストする。
     def test_teacher_home_view_queryset(self):
         """教員の課題一覧に担当学生の課題のみが表示されることを確認"""
         self.client.login(user_id='teacher1', password='password')
@@ -152,12 +166,14 @@ class TaskViewsTest(TestCase):
         self.assertNotIn(self.assignment2, assignments_in_context) # teacher1はstudent2の担当ではない
         self.assertEqual(len(assignments_in_context), 1)
 
+    # ブラックボックステスト/ペネトレーションテスト: 権限のない学生ユーザーが教員のホームページにアクセスしようとした場合に、アクセスが拒否されるか（ステータスコード403）をテストする。
     def test_teacher_home_view_for_student_is_forbidden(self):
         """学生は教員の課題一覧ページにアクセスできないことを確認"""
         self.client.login(user_id='student1', password='password')
         response = self.client.get(self.teacher_home_url)
         self.assertEqual(response.status_code, 403)
 
+    # ホワイトボックステスト/ペネトレーションテスト: ある教員が、自身の担当ではない学生の課題情報を閲覧できないことをテストする。データ分離が適切に行われているかを確認する。
     def test_teacher_home_view_for_unrelated_teacher(self):
         """担当外の教員は、他人の担当学生の課題を閲覧できないことを確認"""
         # teacher2でログイン（student1の担当ではない）
