@@ -1,47 +1,13 @@
+{% extends 'base.html' %}
 {% load django_bootstrap5 %}
 
 {% bootstrap_css %}
 {% bootstrap_javascript %}
 
-<!DOCTYPE html>
-<html lang="ja">
-
-<head>
-    <meta charset="UTF-8">
-    <title>403</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            background-color: #ffffff;
-        }
-
-        .header {
-            background-color: #00587A;
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            margin: 0;
-        }
-    </style>
-</head>
-
-<body>
-    <!-- ヘッダー -->
-    <div class="header">
-        <h1>403 Forbidden</h1>
-    </div>
-
-    <div class="container my-4">
-        <h2>アクセスが拒否されました</h2>
-        <p>ログイン情報が正しいかお確かめください。</p>
-        <a href="{% url 'login' %}" class="btn btn-primary">ログイン</a>
-    </div>
-</body>
-
-</html>
+{% block content %}
+<div class="container my-4">
+    <h1>403 Forbidden</h1>
+    <p>ログイン情報が正しいかお確かめください。</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">ログイン</a>
+</div>
+{% endblock %}

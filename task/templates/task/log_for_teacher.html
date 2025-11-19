@@ -6,13 +6,6 @@
 
 {% block content %}
 <div class="container my-4">
-    {% if easter_egg %}
-    <div id="easter-egg" style="position:fixed;right:20px;bottom:20px;z-index:9999;">
-    <img src="{{ easter_gif_url }}" alt="easter gif" style="max-width:320px;max-height:240px;border:3px solid rgba(0,0,0,0.5);border-radius:8px;">
-    <p style="color:#fff;text-align:center;margin:4px 0 0;">{{ easter_message }}</p>
-    </div>
-    {% endif %}
-
     <h2>アクティビティログ</h2>
 
     <table class="table table-bordered align-middle">

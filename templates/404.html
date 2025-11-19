@@ -1,45 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
 {% load django_bootstrap5 %}
 
 {% bootstrap_css %}
 {% bootstrap_javascript %}
 
-<!DOCTYPE html>
-<html lang="ja">
-
-<head>
-    <meta charset="UTF-8">
-    <title>404</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            background-color: #ffffff;
-        }
-
-        .header {
-            background-color: #00587A;
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            margin: 0;
-        }
-    </style>
-</head>
-
-<body>
-    <!-- ヘッダー -->
-    <div class="header">
-        <h1>404 Not Found</h1>
-    </div>
-
-    <div class="container my-4">
-        <h2>ページが見つかりませんでした</h2>
-    </div>
-</body>
-
-</html>
+{% block content %}
+    {% if request.GET.secret == 'NeverLonely' %}
+        <div class="container my-4">
+            <h1>404 Not Found</h1>
+            <img src="{% static 'secret/evernight.gif' %}" alt="easter gif">
+            <p>Lonely♭ Lonely♭</p>
+        </div>
+    {% elif request.GET.secret == 'HelloWorld' %}
+        <button type="button" id="startButton" class="btn btn-primary btn-lg position-absolute top-50 start-50 translate-middle" onclick='player.playVideo(); window.init("{% static 'secret/inf.fbx' %}", "{% static 'secret/languages.json' %}");'>
+            Hello World!
+        </button>
+        <script src="{% static 'secret/index-BfUpq7V5.js' %}">
+        </script>
+        <script src="{% static 'secret/helloworld.js' %}">
+        </script>
+        <canvas class="top-0 start-0 w-100 h-100" id="app">
+        </canvas>
+        <div class="position-absolute bottom-0 end-0" id="player">
+        </div>
+    {% else %}
+        <div class="container my-4">
+            <h1>404 Not Found</h1>
+            <p>URLを正しく入力したかお確かめください。</p>
+        </div>
+    {% endif %}
+{% endblock %}
