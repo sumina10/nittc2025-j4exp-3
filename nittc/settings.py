@@ -30,7 +30,9 @@ FORCE_SCRIPT_NAME = env.get('FORCE_SCRIPT_NAME', None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (env.get('DEBUG', 'True') == 'True')
 
-ALLOWED_HOSTS = env.get('ALLOWED_HOSTS', default='localhost:8000').split(',')
+ALLOWED_HOSTS = env.get('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+
+# 127.0.0.1,localhost
 
 INTERNAL_IPS = [
     "127.0.0.1",
