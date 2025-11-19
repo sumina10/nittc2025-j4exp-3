@@ -8,84 +8,46 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}学生用HOME{% endblock %}</title>
+    <title>{% block title %}HOME{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
             --bs-primary: #00587A;
             --bs-primary-rgb: 0, 88, 122;
         }
-
-        body {
-            background-color: #ffffff;
-        }
-
-        .header {
-            background-color: var(--bs-primary);
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            margin: 0;
-        }
-
-        .status-icon {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
-
-        .status-submitted {
-            background-color: green;
-        }
-
-        .status-in-progress {
-            background-color: orange;
-        }
-
-        .status-resubmit-working {
-            background-color: yellow;
-        }
-
-        .status-resubmitted {
-            background-color: blue;
-        }
-
-        .table th {
-            background-color: #00587A;
-            color: white;
-        }
-
-        .table td,
-        .table th {
-            vertical-align: middle;
-        }
-
-        .action-icon {
-            cursor: pointer;
-        }
     </style>
 </head>
-
 <body>
     <!-- ヘッダー -->
-    <div class="header">
-        <h1>{% block header_title %}学生用HOME{% endblock %}</h1>
-        <div>
-            {% if user.is_authenticated %}
-            <a href="{% url 'profile' %}" class="btn btn-outline-light me-2">プロフィール</a>
-            {% endif %}
-            {% block header_button %}
-            {% endblock %}
+    <nav class="navbar navbar-expand-lg navbar-light bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="{% url 'profile' %}">
+                HOME
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-end">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item m-lg-1 m-2">
+                            <a class="btn btn-outline-light" href="{% url 'profile' %}">
+                                プロフィール
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item m-lg-1 m-2">
+                            <a class="btn btn-outline-light" href="{% url 'login' %}">
+                                ログイン
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
+    </nav>
 
     {% block content %}
     {% endblock %}

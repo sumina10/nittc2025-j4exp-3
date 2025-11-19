@@ -1,0 +1,46 @@
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>500</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+
+        .header {
+            background-color: #00587A;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ヘッダー -->
+    <div class="header">
+        <h1>500 Internal Server Error</h1>
+    </div>
+
+    <div class="container my-4">
+        <h2>エラーが発生しました</h2>
+        <p>時間を置いてから再度お試しください。繰り返しメッセージが表示される場合は管理者にお知らせください。</p>
+    </div>
+</body>
+
+</html>
