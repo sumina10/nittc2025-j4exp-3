@@ -84,8 +84,7 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     template_name = "task/teacher_home.html"
 
     def get_queryset(self):
-        if not self.request.user.is_teacher:
-            raise PermissionDenied
+        
         
         # --- Assignment を直接絞り込む ---
 
