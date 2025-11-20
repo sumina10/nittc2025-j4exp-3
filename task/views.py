@@ -9,7 +9,7 @@ from django.db.models import Prefetch,Q
 from django.core.exceptions import PermissionDenied
 from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Reminder
+from .models import Assignment, Reminder, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
@@ -38,8 +38,34 @@ class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView):
     model = Assignment
     template_name = "task/student_home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        courses = Course.objects.filter(classroom__students=self.request.user)
+        context['courses'] = courses
+
+        status = []
+        for code, label in Assignment.STATUS_CHOICES:
+            status.append({
+                'id': code,
+                'label': label,
+            })
+
+        context['statues'] = status
+
+        return context
+
     def get_queryset(self):
-        return super().get_queryset().filter(student=self.request.user)
+        query = super().get_queryset().filter(student=self.request.user)
+
+        # フィルターがあれば適用する
+        course = self.request.GET.get('course')
+        if course:
+            query = query.filter(course__id=course)
+        status = self.request.GET.get('status')
+        if status:
+            query = query.filter(status=status)
+
+        return query
     
 class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, UpdateView):
     model = Assignment
