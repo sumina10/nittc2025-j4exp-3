@@ -83,9 +83,39 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     model = Assignment
     template_name = "task/teacher_home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        q_subject_teacher = Q(teachers=self.request.user)
+        q_homeroom_teacher = Q(classroom__students=self.request.user)
+        courses = Course.objects.filter(
+            q_subject_teacher | q_homeroom_teacher
+        ).distinct()
+        context['courses'] = courses
+
+        status = []
+        for code, label in Assignment.STATUS_CHOICES:
+            status.append({
+                'id': code,
+                'label': label,
+            })
+
+        context['statues'] = status
+
+        return context
+
     def get_queryset(self):
-        
-        
+        course = self.request.GET.get('course')
+        if course:
+            q_course = Q(course__id=course)
+        else:
+            q_course = ~Q()
+        status = self.request.GET.get('status')
+        if status:
+            q_status = Q(status=status)
+        else:
+            q_status = ~Q()
+
         # --- Assignment を直接絞り込む ---
 
         # 条件A: 自分が「科目担当」であるコースの課題
@@ -96,8 +126,10 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 条件A または 条件B に合致する課題（Assignment）を取得
         queryset = Assignment.objects.filter(
-            q_subject_teacher | q_homeroom_teacher
-        ).select_related('student', 'course').distinct() 
+            (q_subject_teacher | q_homeroom_teacher) & q_course & q_status
+        ).select_related('student', 'course').distinct()
+
+
         
         return queryset
 
