@@ -87,7 +87,7 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         q_subject_teacher = Q(teachers=self.request.user)
-        q_homeroom_teacher = Q(classroom__students=self.request.user)
+        q_homeroom_teacher = Q(classroom__homeroom_teacher=self.request.user)
         courses = Course.objects.filter(
             q_subject_teacher | q_homeroom_teacher
         ).distinct()
