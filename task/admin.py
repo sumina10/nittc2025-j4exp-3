@@ -7,7 +7,6 @@ from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render
 
-from accounts.admin import TeacherAdmin
 from accounts.models import Teacher
 from .forms import CsvImportForm
 from .models import ClassRoom, Course, Assignment, Reminder
