@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
@@ -13,6 +14,8 @@ from .models import Assignment, Reminder, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
+import csv
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -128,8 +131,6 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         queryset = Assignment.objects.filter(
             (q_subject_teacher | q_homeroom_teacher) & q_course & q_status
         ).select_related('student', 'course').distinct()
-
-
         
         return queryset
 
@@ -224,6 +225,60 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
+
+@login_required
+def export_logs_csv(request):
+    if not request.user.is_teacher:
+        raise PermissionDenied
+
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="export.csv"'},
+    )
+
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "timestamp",
+            "actor",
+            "action",
+            "object_repr",
+            "changes",
+        ]
+    )
+
+    q_subject = Q(course__teachers=request.user)
+
+    q_homeroom = Q(student__classrooms_students__teachers=request.user)
+
+    my_assignment_ids = Assignment.objects.filter(
+        q_subject | q_homeroom
+    ).values_list(
+        'pk', flat=True
+    ).distinct()
+
+    assignment_ct = ContentType.objects.get_for_model(Assignment)  # 対象モデルが Assignment の ContentTypeを取得
+    q_my_assignment_logs = Q(
+        content_type=assignment_ct,  # モデルが Assignment で
+        object_pk__in=my_assignment_ids  # ID が担当リストにある
+    )
+
+    log_entries = LogEntry.objects.filter(
+        q_my_assignment_logs
+    ).select_related('actor').order_by('-timestamp')
+
+    for log_entry in log_entries:
+        writer.writerow(
+            [
+                log_entry.timestamp,
+                log_entry.actor,
+                log_entry.get_action_display(),
+                log_entry.object_repr,
+                log_entry.changes,
+            ]
+        )
+
+    return response
 
 class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
     template_name = "task/notification_for_student.html"
