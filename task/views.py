@@ -5,11 +5,11 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from django.db.models import Prefetch,Q
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from accounts.models import Student
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Reminder
+from .models import Assignment, Reminder, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
@@ -38,8 +38,34 @@ class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView):
     model = Assignment
     template_name = "task/student_home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        courses = Course.objects.filter(classroom__students=self.request.user)
+        context['courses'] = courses
+
+        status = []
+        for code, label in Assignment.STATUS_CHOICES:
+            status.append({
+                'id': code,
+                'label': label,
+            })
+
+        context['statues'] = status
+
+        return context
+
     def get_queryset(self):
-        return super().get_queryset().filter(student=self.request.user)
+        query = super().get_queryset().filter(student=self.request.user)
+
+        # フィルターがあれば適用する
+        course = self.request.GET.get('course')
+        if course:
+            query = query.filter(course__id=course)
+        status = self.request.GET.get('status')
+        if status:
+            query = query.filter(status=status)
+
+        return query
     
 class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, UpdateView):
     model = Assignment
@@ -57,10 +83,39 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     model = Assignment
     template_name = "task/teacher_home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        q_subject_teacher = Q(teachers=self.request.user)
+        q_homeroom_teacher = Q(classroom__teachers=self.request.user)
+        courses = Course.objects.filter(
+            q_subject_teacher | q_homeroom_teacher
+        ).distinct()
+        context['courses'] = courses
+
+        status = []
+        for code, label in Assignment.STATUS_CHOICES:
+            status.append({
+                'id': code,
+                'label': label,
+            })
+
+        context['statues'] = status
+
+        return context
+
     def get_queryset(self):
-        if not self.request.user.is_teacher:
-            raise PermissionDenied
-        
+        course = self.request.GET.get('course')
+        if course:
+            q_course = Q(course__id=course)
+        else:
+            q_course = ~Q()
+        status = self.request.GET.get('status')
+        if status:
+            q_status = Q(status=status)
+        else:
+            q_status = ~Q()
+
         # --- Assignment を直接絞り込む ---
 
         # 条件A: 自分が「科目担当」であるコースの課題
@@ -71,8 +126,10 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 条件A または 条件B に合致する課題（Assignment）を取得
         queryset = Assignment.objects.filter(
-            q_subject_teacher | q_homeroom_teacher
-        ).select_related('student', 'course').distinct() 
+            (q_subject_teacher | q_homeroom_teacher) & q_course & q_status
+        ).select_related('student', 'course').distinct()
+
+
         
         return queryset
 

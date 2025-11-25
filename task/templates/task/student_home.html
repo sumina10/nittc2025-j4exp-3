@@ -5,14 +5,34 @@
 {% bootstrap_javascript %}
 
 {% block title %}
-課題提出一覧
+    課題提出一覧
 {% endblock title %}
 
 {% block content %}
-<div class="container my-4">
-    <h2>提出課題一覧</h2>
-    <table class="table table-bordered text-center align-middle">
-        <thead class="table-primary">
+    <div class="container my-4">
+        <h2>提出課題一覧</h2>
+        <div class="p-3">
+            <form method="get">
+                <div class="input-group">
+                    <label for="course" class="input-group-text">絞り込み</label>
+                    <select name="course" class="form-select w-auto">
+                        <option value="" selected>科目</option>
+                        {% for course in courses %}
+                            <option value="{{ course.id }}">{{ course }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="status" class="form-select w-auto">
+                        <option value="" selected>ステータス</option>
+                        {% for status in statues %}
+                            <option value="{{ status.id }}">{{ status.label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">絞り込み</button>
+                </div>
+            </form>
+        </div>
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-primary">
             <tr>
                 <th width="10%">締め切り</th>
                 <th width="10%">科目</th>
@@ -20,30 +40,30 @@
                 <th width="40%">課題内容</th>
                 <th width="20%">ステータス</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for assignment in object_list %}
-            <tr>
-                <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
-                <td>{{ assignment.course }}</td>
-                <td>
-                    <a href="{% url 'student-assignment-edit' assignment.pk %}" class="action-icon" title="編集">
-                        {{ assignment.title }}
-                    </a>
-                </td>
-                <td>
-                    {{ assignment.description | escape }}
-                </td>
-                <td>
-                    {{ assignment.get_status_display }}
-                </td>
-            </tr>
+                <tr>
+                    <td>{{ assignment.due_date|date:"Y/m/d" }}</td>
+                    <td>{{ assignment.course }}</td>
+                    <td>
+                        <a href="{% url 'student-assignment-edit' assignment.pk %}" class="action-icon" title="編集">
+                            {{ assignment.title }}
+                        </a>
+                    </td>
+                    <td>
+                        {{ assignment.description | escape }}
+                    </td>
+                    <td>
+                        {{ assignment.get_status_display }}
+                    </td>
+                </tr>
             {% empty %}
-            <tr>
-                <td colspan="5">現在、提出すべき課題はありません．</td>
-            </tr>
+                <tr>
+                    <td colspan="5">現在、提出すべき課題はありません．</td>
+                </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 {% endblock content %}
