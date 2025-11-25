@@ -1,5 +1,14 @@
 from django.urls import path
-from .views import CreateAssignment, StudentAssignmentView, StudentAssignmentEditView, TeacherAssignmentView, TeacherLogView, StudentNotificationView, TeacherReminderCreateView
+from .views import (
+    CreateAssignment,
+    StudentAssignmentView,
+    StudentAssignmentEditView,
+    TeacherAssignmentView,
+    TeacherLogView,
+    StudentNotificationView,
+    TeacherReminderCreateView,
+    export_logs_csv
+)
 
 urlpatterns = [
     path('student_home/create/',CreateAssignment.as_view(),name='task-create'),
@@ -8,5 +17,6 @@ urlpatterns = [
     path('student_home/notify/',StudentNotificationView.as_view(),name='student-notify'),
     path('teacher_home/',TeacherAssignmentView.as_view(),name='teacher-home'),
     path('teacher_home/log/', TeacherLogView.as_view(), name='teacher-log'),
+    path('teacher_home/log/export', export_logs_csv, name='export-logs-csv'),
     path('teacher_home/reminder/', TeacherReminderCreateView.as_view(), name='teacher-reminder'),
 ]
