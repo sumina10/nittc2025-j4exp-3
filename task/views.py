@@ -4,15 +4,18 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-from django.db.models import Prefetch,Q
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
-from accounts.models import Student
+from accounts.models import Student, CustomUser
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
-from .models import Assignment, Reminder
+from .models import Assignment, Reminder, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
 from auditlog.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
+import csv
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -38,8 +41,34 @@ class StudentAssignmentView(LoginRequiredMixin, StudentRequiredMixin, ListView):
     model = Assignment
     template_name = "task/student_home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        courses = Course.objects.filter(classroom__students=self.request.user)
+        context['courses'] = courses
+
+        status = []
+        for code, label in Assignment.STATUS_CHOICES:
+            status.append({
+                'id': code,
+                'label': label,
+            })
+
+        context['statues'] = status
+
+        return context
+
     def get_queryset(self):
-        return super().get_queryset().filter(student=self.request.user)
+        query = super().get_queryset().filter(student=self.request.user)
+
+        # フィルターがあれば適用する
+        course = self.request.GET.get('course')
+        if course:
+            query = query.filter(course__id=course)
+        status = self.request.GET.get('status')
+        if status:
+            query = query.filter(status=status)
+
+        return query
     
 class StudentAssignmentEditView(LoginRequiredMixin, StudentRequiredMixin, UpdateView):
     model = Assignment
@@ -57,10 +86,39 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
     model = Assignment
     template_name = "task/teacher_home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        q_subject_teacher = Q(teachers=self.request.user)
+        q_homeroom_teacher = Q(classroom__teachers=self.request.user)
+        courses = Course.objects.filter(
+            q_subject_teacher | q_homeroom_teacher
+        ).distinct()
+        context['courses'] = courses
+
+        status = []
+        for code, label in Assignment.STATUS_CHOICES:
+            status.append({
+                'id': code,
+                'label': label,
+            })
+
+        context['statues'] = status
+
+        return context
+
     def get_queryset(self):
-        if not self.request.user.is_teacher:
-            raise PermissionDenied
-        
+        course = self.request.GET.get('course')
+        if course:
+            q_course = Q(course__id=course)
+        else:
+            q_course = ~Q()
+        status = self.request.GET.get('status')
+        if status:
+            q_status = Q(status=status)
+        else:
+            q_status = ~Q()
+
         # --- Assignment を直接絞り込む ---
 
         # 条件A: 自分が「科目担当」であるコースの課題
@@ -71,8 +129,8 @@ class TeacherAssignmentView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         
         # 条件A または 条件B に合致する課題（Assignment）を取得
         queryset = Assignment.objects.filter(
-            q_subject_teacher | q_homeroom_teacher
-        ).select_related('student', 'course').distinct() 
+            (q_subject_teacher | q_homeroom_teacher) & q_course & q_status
+        ).select_related('student', 'course').distinct()
         
         return queryset
 
@@ -92,15 +150,23 @@ class TeacherReminderCreateView(LoginRequiredMixin, TeacherRequiredMixin, Create
         return super().form_valid(form)
 
 class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
-    
     model = LogEntry
     template_name = "task/log_for_teacher.html"
     context_object_name = 'logs'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        users = Student.objects.filter(
+            Q(classrooms_students__teachers=self.request.user) | Q(classrooms_students__courses__teachers=self.request.user)
+        )
+        context['students'] = users.distinct()
+
+        return context
 
     def get_queryset(self):
         if not self.request.user.is_teacher:
             raise PermissionDenied
-        # 1. 担当する Assignment の ID リストを取得
+        # 1. 担当する モデル の ID リストを取得
         # 条件A: コースに紐づく教師が自分の場合
         q_subject = Q(course__teachers=self.request.user)
         
@@ -110,34 +176,109 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         # AまたはBに合致する課題（Assignment）のIDリスト
         my_assignment_ids = Assignment.objects.filter(
             q_subject | q_homeroom
-        ).values_list('pk', flat=True).distinct()
+        )
+
         # 'pk' は Assignment の主キー(Primary Key)
         # flat=True を使うと，平坦なリストとして取得できる
         # コレで my_assignment_ids は担当する Assignment の ID リストになる
 
+        # 担当する生徒のIDリスト
+        #
+        custom_user_ids = Student.objects.filter(
+            Q(classrooms_students__teachers=self.request.user) | Q(classrooms_students__courses__teachers=self.request.user)
+        )
 
-        # 2. Assignment の ContentType オブジェクトを取得
+        if self.request.GET.get('student'):
+            my_assignment_ids = my_assignment_ids.filter(
+                student__pk=self.request.GET.get('student')
+            )
+            custom_user_ids = custom_user_ids.filter(
+                pk=self.request.GET.get('student')
+            )
+
+        my_assignment_ids = my_assignment_ids.values_list('pk', flat=True).distinct()
+        custom_user_ids = custom_user_ids.values_list('pk', flat=True).distinct()
+
+        # 2. ContentType オブジェクトを取得
+        customuser_ct = ContentType.objects.get_for_model(CustomUser)  # 対象モデルが CustomUser の ContentTypeを取得
         assignment_ct = ContentType.objects.get_for_model(Assignment)   # 対象モデルが Assignment の ContentTypeを取得
 
 
         # 3. LogEntry を絞り込む Q オブジェクトを定義
         
-        # 条件1: 教師自身のログ
-        # q_self = Q(actor=self.request.user)
+        # 条件1: 生徒のログ
+        q_login = Q(
+            content_type=customuser_ct,          # モデルが CustomUser で
+            object_pk__in=custom_user_ids        # ID が担当生徒リストにある
+        )
         
         # 条件2: 担当 Assignment に対するログ（actor が誰であれ）
         q_my_assignment_logs = Q(
             content_type=assignment_ct,      # モデルが Assignment で
             object_pk__in=my_assignment_ids  # ID が担当リストにある
         )
-        
+
         # 4. 絞り込みを実行
         queryset = super().get_queryset().filter(
-            q_my_assignment_logs
+            q_login | q_my_assignment_logs
         ).distinct()
         
         # 日時の降順（新しい順）で並び替え
         return queryset.select_related('actor').order_by('-timestamp')
+
+@login_required
+def export_logs_csv(request):
+    if not request.user.is_teacher:
+        raise PermissionDenied
+
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="export.csv"'},
+    )
+
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "timestamp",
+            "actor",
+            "action",
+            "object_repr",
+            "changes",
+        ]
+    )
+
+    q_subject = Q(course__teachers=request.user)
+
+    q_homeroom = Q(student__classrooms_students__teachers=request.user)
+
+    my_assignment_ids = Assignment.objects.filter(
+        q_subject | q_homeroom
+    ).values_list(
+        'pk', flat=True
+    ).distinct()
+
+    assignment_ct = ContentType.objects.get_for_model(Assignment)  # 対象モデルが Assignment の ContentTypeを取得
+    q_my_assignment_logs = Q(
+        content_type=assignment_ct,  # モデルが Assignment で
+        object_pk__in=my_assignment_ids  # ID が担当リストにある
+    )
+
+    log_entries = LogEntry.objects.filter(
+        q_my_assignment_logs
+    ).select_related('actor').order_by('-timestamp')
+
+    for log_entry in log_entries:
+        writer.writerow(
+            [
+                log_entry.timestamp,
+                log_entry.actor,
+                log_entry.get_action_display(),
+                log_entry.object_repr,
+                log_entry.changes,
+            ]
+        )
+
+    return response
 
 class StudentNotificationView(LoginRequiredMixin, StudentRequiredMixin, TemplateView):
     template_name = "task/notification_for_student.html"

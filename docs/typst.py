@@ -1,7 +1,6 @@
 import os
-import sys
 import pathlib
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 # List up directories to be documented
 docs_dir = pathlib.Path(__file__).parent
@@ -61,7 +60,7 @@ def get_directory_structure(root_dir: pathlib.Path) -> Dict[str, List]:
             
             if item.is_dir():
                 child_structure = get_directory_structure(item)
-                files = len(child_structure['files'])
+                #files = len(child_structure['files'])
                 structure['directories'].append({
                     'name': item.name,
                     'path': item,
