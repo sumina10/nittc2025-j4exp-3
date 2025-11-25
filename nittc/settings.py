@@ -155,3 +155,8 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 LOGIN_URL = '/accounts/login/'
 
 AUDITLOG_INCLUDE_ALL_MODELS = True
+AUDITLOG_MASK_TRACKING_FIELDS = (
+    "password",
+    "api_key",
+    "secret_token"
+)
