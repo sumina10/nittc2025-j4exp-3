@@ -5,11 +5,24 @@
 {% bootstrap_javascript %}
 
 {% block content %}
-<div class="container my-4">
-    <h2>アクティビティログ</h2>
-
-    <table class="table table-bordered align-middle">
-        <thead class="table-primary">
+    <div class="container my-4">
+        <h2>アクティビティログ</h2>
+        <div class="p-3">
+            <form method="get">
+                <div class="input-group">
+                    <label for="student" class="input-group-text">絞り込み</label>
+                    <select name="student" class="form-select w-auto">
+                        <option value="" selected>学生</option>
+                        {% for student in students %}
+                            <option value="{{ student.id }}">{{ student }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">絞り込み</button>
+                </div>
+            </form>
+        </div>
+        <table class="table table-bordered align-middle">
+            <thead class="table-primary">
             <tr>
                 <th style="width: 15%;">日時</th>
                 <th style="width: 10%;">操作者</th>
@@ -18,53 +31,53 @@
                 <th style="width: 10%;">操作内容</th>
                 <th style="width: 30%;">変更詳細</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for log in logs %}
-            <tr>
-                <td>{{ log.timestamp|date:"Y/m/d H:i" }}</td>
-                <td>{{ log.actor }}</td>
-                <td>{{ log.content_type.model }}</td>
-                <td>{{ log.object_repr }}</td>
-                <td>{{ log.get_action_display }}</td>
-                <td>
-                    {# log.action == 0 (Create) の場合 #}
-                    {% if log.action == 0 %}
-                    <ul>
-                        {% for field, values in log.changes_display_dict.items %}
-                        {# values.1 (新しい値) が存在する場合のみ表示 #}
-                        {% if values.1 %}
-                        <li>
-                            <strong>{{ field }}</strong>:
-                            {{ values.1 }}
-                        </li>
+                <tr>
+                    <td>{{ log.timestamp|date:"Y/m/d H:i" }}</td>
+                    <td>{{ log.actor }}</td>
+                    <td>{{ log.content_type.model }}</td>
+                    <td>{{ log.object_repr }}</td>
+                    <td>{{ log.get_action_display }}</td>
+                    <td>
+                        {# log.action == 0 (Create) の場合 #}
+                        {% if log.action == 0 %}
+                            <ul>
+                                {% for field, values in log.changes_display_dict.items %}
+                                    {# values.1 (新しい値) が存在する場合のみ表示 #}
+                                    {% if values.1 %}
+                                        <li>
+                                            <strong>{{ field }}</strong>:
+                                            {{ values.1 }}
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+
+                            {# log.action == 1 (Update) の場合 #}
+                        {% elif log.action == 1 %}
+                            <ul>
+                                {% for field, values in log.changes_display_dict.items %}
+                                    <li>
+                                        <strong>{{ field }}</strong>:
+                                        {{ values.0 }} → {{ values.1 }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+
+                            {# log.action == 2 (Delete) などの場合 #}
+                        {% elif log.action == 2 %}
+                            (削除されました)
                         {% endif %}
-                        {% endfor %}
-                    </ul>
-
-                    {# log.action == 1 (Update) の場合 #}
-                    {% elif log.action == 1 %}
-                    <ul>
-                        {% for field, values in log.changes_display_dict.items %}
-                        <li>
-                            <strong>{{ field }}</strong>:
-                            {{ values.0 }} → {{ values.1 }}
-                        </li>
-                        {% endfor %}
-                    </ul>
-
-                    {# log.action == 2 (Delete) などの場合 #}
-                    {% elif log.action == 2 %}
-                    (削除されました)
-                    {% endif %}
-                </td>
-            </tr>
+                    </td>
+                </tr>
             {% empty %}
-            <tr>
-                <td colspan="6" style="padding: 8px; text-align: center;">ログはありません．</td>
-            </tr>
+                <tr>
+                    <td colspan="6" style="padding: 8px; text-align: center;">ログはありません．</td>
+                </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

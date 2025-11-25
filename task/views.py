@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
-from accounts.models import Student
+from accounts.models import Student, CustomUser
 from accounts.mixins import StudentRequiredMixin, TeacherRequiredMixin
 from .models import Assignment, Reminder, Course
 from .forms import AssignmentCreateForm, AssignmentEditForm, ReminderCreateForm
@@ -149,15 +149,23 @@ class TeacherReminderCreateView(LoginRequiredMixin, TeacherRequiredMixin, Create
         return super().form_valid(form)
 
 class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
-    
     model = LogEntry
     template_name = "task/log_for_teacher.html"
     context_object_name = 'logs'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        users = Student.objects.filter(
+            Q(classrooms_students__teachers=self.request.user) | Q(classrooms_students__courses__teachers=self.request.user)
+        )
+        context['students'] = users.distinct()
+
+        return context
 
     def get_queryset(self):
         if not self.request.user.is_teacher:
             raise PermissionDenied
-        # 1. 担当する Assignment の ID リストを取得
+        # 1. 担当する モデル の ID リストを取得
         # 条件A: コースに紐づく教師が自分の場合
         q_subject = Q(course__teachers=self.request.user)
         
@@ -167,30 +175,51 @@ class TeacherLogView(LoginRequiredMixin, TeacherRequiredMixin, ListView):
         # AまたはBに合致する課題（Assignment）のIDリスト
         my_assignment_ids = Assignment.objects.filter(
             q_subject | q_homeroom
-        ).values_list('pk', flat=True).distinct()
+        )
+
         # 'pk' は Assignment の主キー(Primary Key)
         # flat=True を使うと，平坦なリストとして取得できる
         # コレで my_assignment_ids は担当する Assignment の ID リストになる
 
+        # 担当する生徒のIDリスト
+        #
+        custom_user_ids = Student.objects.filter(
+            Q(classrooms_students__teachers=self.request.user) | Q(classrooms_students__courses__teachers=self.request.user)
+        )
 
-        # 2. Assignment の ContentType オブジェクトを取得
+        if self.request.GET.get('student'):
+            my_assignment_ids = my_assignment_ids.filter(
+                student__pk=self.request.GET.get('student')
+            )
+            custom_user_ids = custom_user_ids.filter(
+                pk=self.request.GET.get('student')
+            )
+
+        my_assignment_ids = my_assignment_ids.values_list('pk', flat=True).distinct()
+        custom_user_ids = custom_user_ids.values_list('pk', flat=True).distinct()
+
+        # 2. ContentType オブジェクトを取得
+        customuser_ct = ContentType.objects.get_for_model(CustomUser)  # 対象モデルが CustomUser の ContentTypeを取得
         assignment_ct = ContentType.objects.get_for_model(Assignment)   # 対象モデルが Assignment の ContentTypeを取得
 
 
         # 3. LogEntry を絞り込む Q オブジェクトを定義
         
-        # 条件1: 教師自身のログ
-        # q_self = Q(actor=self.request.user)
+        # 条件1: 生徒のログ
+        q_login = Q(
+            content_type=customuser_ct,          # モデルが CustomUser で
+            object_pk__in=custom_user_ids        # ID が担当生徒リストにある
+        )
         
         # 条件2: 担当 Assignment に対するログ（actor が誰であれ）
         q_my_assignment_logs = Q(
             content_type=assignment_ct,      # モデルが Assignment で
             object_pk__in=my_assignment_ids  # ID が担当リストにある
         )
-        
+
         # 4. 絞り込みを実行
         queryset = super().get_queryset().filter(
-            q_my_assignment_logs
+            q_login | q_my_assignment_logs
         ).distinct()
         
         # 日時の降順（新しい順）で並び替え
