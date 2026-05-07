@@ -161,3 +161,5 @@ The project includes a comprehensive test suite for the `accounts` and `task` ap
 *   **Model Tests**: Verify model defaults, `__str__` representations, database relationships, and custom manager logic.
 *   **Form Tests**: Validate form logic, including error handling for invalid data (e.g., past due dates) and the critical dynamic filtering of the `course` queryset based on user enrollment.
 *   **View Tests**: Provide extensive coverage for access control, ensuring that each user role can only access appropriate views and that unauthenticated users are properly redirected. They confirm that querysets are correctly scoped (e.g., a student sees only their own assignments) and that attempts to access another user's data are denied.
+
+# なおしたよ
